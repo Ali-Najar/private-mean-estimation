@@ -186,23 +186,40 @@ for n in n_range:
     print(f"n={n}")
 
 
-
 plt.figure(figsize=(10,6))
+
+
+plt.rcParams.update({
+    # use LaTeX to render all text
+    "text.usetex":    True,
+    # default font family for text
+    "font.family":    "serif",
+    # ask LaTeX for Computer Modern Roman
+    "font.serif":     ["Computer Modern Roman"],
+    # match your desired size/weight
+    "font.size":      14,
+    "font.weight":    "normal",
+    # ensure math uses the same font
+    "text.latex.preamble": r"\usepackage{amsmath} \usepackage{amssymb} \usepackage{amsfonts}"
+})
+
 labels = [
-    "(i)",
-    "(ii)",
-    "(iii)",
-    "(iv)",
-    "(v)",
-    "(vi)",
-    "(vii)",
-    "(viii)",
+    "(i) $\\mathbf{D} \\mathbf{A}_1^{1/2}, \\mathbf{A}_1^{1/2}$",
+    "(ii) $\\mathbf{A}, \\mathbf{I}$",
+    "(iii) $\\mathbf{I}, \\mathbf{A}$",
+    "(iv) $\\mathbf{A}^{1/2}, \\mathbf{A}^{1/2}$",
+    "(v) $\\mathbf{A}_1^{1/2}, \\mathbf{A}_1^{-1/2} \\mathbf{A}$",
+    "(vi) $\\mathbf{A} \\mathbf{D}_{\mathrm{Toep}}^{-1/2}, \\mathbf{D}_{\mathrm{Toep}}^{1/2}$",
+    "(vii) $\\mathbf{D}_{\mathrm{Toep}}^{1/2}, \\mathbf{D}_{\mathrm{Toep}}^{-1/2} \\mathbf{A}$",
+    "(viii) $\\mathbf{A} \\mathbf{D}_{\mathrm{Toep}}^{-1}, \\mathbf{D}_{\mathrm{Toep}}$",
     "AOF"
 ]
 
-plot_all = False
+markers = [None,'o', 's', 'D', '^', 'v', '>', '<', 'p', 'x']
+
+plot_all = True
 plot_ratios = False
-plot_log_scale = False
+plot_log_scale = True
 
 ratio_ii_aof = [res[2][i] / res[9][i] for i in range(len(res[2]))]
 ratio_vi_aof = [res[6][i] / res[9][i] for i in range(len(res[6]))]
@@ -217,13 +234,12 @@ for i in range(1,number_of_plots):
         plt.plot(n_range, ratio_vi_aof, label='(vi)', linestyle='--')
         plt.plot(n_range, ratio_viii_aof, label='(viii)', linestyle='--')   
     else:
-        plt.plot(n_range, res[i], label=labels[i-1])
+        plt.plot(n_range, res[i], marker=markers[i] , label=labels[i-1])
 
 plt.xlabel('Matrix Size')
 if plot_log_scale:
     plt.xscale('log')
-    plt.xlabel('log(Matrix Size)')
-plt.ylabel('Objective')
+plt.ylabel('$\mathrm{RMSE}(\mathbf{B},\mathbf{C})$')
 plt.legend()
 plt.tight_layout()
 savefile_name = "error_vs_log_mat_size.pdf" if plot_log_scale else "error_vs_mat_size.pdf"
