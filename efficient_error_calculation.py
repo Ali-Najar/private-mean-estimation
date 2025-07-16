@@ -37,10 +37,10 @@ def Band_matrix_factorization(n, p, steps=10):
     return expected_mean_error_BandMF(C_opt, n=n)**0.5 / np.sqrt(n)
 
 
-def compute_toep_sqrt(N):
+def compute_mat_sqrt(N, Toep=True):
     """
     Compute b[0..N] satisfying
-        sum_{i=0}^n b[i]*b[n-i] = 1/(n+1)
+        sum_{i=0}^n b[i]*b[n-i] = 1/(n+1) or sum_{i=0}^n b[i]*b[n-i] = 1
     using NumPy dot for the convolution sum.
     """
     b = np.zeros(N, dtype=np.float64)
@@ -48,11 +48,15 @@ def compute_toep_sqrt(N):
     for n in range(1, N):
         # use a single C-speed dot product instead of the inner Python loop
         #    sum_{i=1..n-1} b[i]*b[n-i]
+
         if n > 1:
             s = np.dot(b[1:n], b[n-1:0:-1])
         else:
             s = 0.0
-        b[n] = (1.0/(n+1) - s) * 0.5
+        if Toep:
+            b[n] = (1.0/(n+1) - s) * 0.5
+        else:
+            b[n] = (1.0 - s) * 0.5
     return b
 
 
@@ -87,8 +91,11 @@ BANDED_CACHE_FILE = 'cache/efficient_banded_cache.npz'
 import os
 
 prev_len = 0
+prev_len_banded = 0
 
 errors_for_A_BandMF = []
+# D A1_sqrt / A1_sqrt
+errors_for_D_A1_sqrt = []
 # A D_toep^{-1/2} / D_toep^{1/2}
 errors_for_A_D_sqrt_inv = []
 # A D_toep^{-1} / D_toep
@@ -99,6 +106,7 @@ errors_for_A_I = []
 if os.path.exists(CACHE_FILE):
     # load whatever was computed before
     data = np.load(CACHE_FILE)
+    errors_for_D_A1_sqrt    = list(data['errors_for_D_A1_sqrt'])
     errors_for_A_I          = list(data['errors_for_A_I'])
     errors_for_A_D_sqrt_inv = list(data['errors_for_A_D_sqrt_inv'])
     errors_for_A_D_inv      = list(data['errors_for_A_D_inv'])
@@ -122,7 +130,12 @@ if prev_len - 1 < EXPS:
     for N in clipped_range:
 
         print(f"Processing N={N}...")
-        
+
+        # D A1_sqrt , A1_sqrt
+        A1_sqrt = compute_mat_sqrt(N, Toep=False)
+        F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, 1.0 / np.arange(1, N+1, dtype=np.float64))
+        errors_for_D_A1_sqrt.append(1/np.sqrt(N) * np.sqrt(F_norm_D_A1_sqrt) * np.linalg.norm(A1_sqrt))
+
         # A I / I
         ordered_array = np.arange(1, N + 1, dtype=np.float64)
         H = np.cumsum(1.0 / ordered_array)
@@ -130,7 +143,7 @@ if prev_len - 1 < EXPS:
         errors_for_A_I.append(error_AI)
 
         # A D_toep^{-1/2} / D_toep^{1/2}
-        D_toep_sqrt = compute_toep_sqrt(N)
+        D_toep_sqrt = compute_mat_sqrt(N, Toep=True)
         D_toep_sqrt_inv = invert_toeplitz_first_column(D_toep_sqrt)
         cumsum_D_toep_sqrt_inv_sqr = np.cumsum(D_toep_sqrt_inv)**2
         inv_squares_cumsum = reverse_cumsum_inv_squares(N)
@@ -149,12 +162,15 @@ if prev_len - 1 < EXPS:
     # Save the results
     np.savez_compressed(
             CACHE_FILE,
+            errors_for_D_A1_sqrt      = np.array(errors_for_D_A1_sqrt),
             errors_for_A_I            = np.array(errors_for_A_I),
             errors_for_A_D_sqrt_inv   = np.array(errors_for_A_D_sqrt_inv),
             errors_for_A_D_inv        = np.array(errors_for_A_D_inv),
         )
 
 if prev_len_banded - 1 < EXPS:
+
+    print(prev_len_banded)
 
     clipped_range_banded = n_range[prev_len_banded:]
 
@@ -170,33 +186,55 @@ if prev_len_banded - 1 < EXPS:
         )
 
 
-plot_ratio = False
+plot_ratio = True
 
 plt.figure()
 
+plt.rcParams.update({
+    # use LaTeX to render all text
+    "text.usetex":    True,
+    # default font family for text
+    "font.family":    "serif",
+    # ask LaTeX for Computer Modern Roman
+    "font.serif":     ["Computer Modern Roman"],
+    # match your desired size/weight
+    "font.size":      16,
+    "font.weight":    "normal",
+    # ensure math uses the same font
+    "text.latex.preamble": r"\usepackage{amsmath}"
+})
+
 if plot_ratio == False:
-    plt.plot(n_range, errors_for_A_I, label='RMSE of (ii)')
-    plt.plot(n_range, errors_for_A_D_sqrt_inv, label='RMSE of (vi)')
-    plt.plot(n_range, errors_for_A_D_inv, label='RMSE of (viii)')
-    plt.plot(n_range, errors_for_A_BandMF, label='Expected Mean Error')
-    plt.xlabel('log(matrix size)')
+    plt.plot(n_range, errors_for_A_I, marker='^', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
+    plt.plot(n_range, errors_for_A_I, marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
+    plt.plot(n_range, errors_for_A_D_sqrt_inv, marker='s', label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range, errors_for_A_D_inv, marker='D', label='RMSE of (viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    plt.plot(n_range, errors_for_A_BandMF, label='Optimal')
+    plt.xlabel('Matrix Size')
     plt.xscale('log')
-    plt.ylabel('RMSE')
+    plt.ylabel('$\mathrm{RMSE}(\mathbf{B},\mathbf{C})$')
     plt.legend()
     plt.tight_layout()
-    plt.savefig("efficient_error_vs_log_mat_size.pdf", format="pdf")
+    plt.savefig("plots/efficient_error_vs_log_mat_size.pdf", format="pdf")
     plt.show()
 else:
-    ratios_AI = [errors_for_A_I[i] / errors_for_A_D_sqrt_inv[i] for i in range(len(errors_for_A_I))]
-    ratios_D_toep = [errors_for_A_D_inv[i] / errors_for_A_D_sqrt_inv[i] for i in range(len(errors_for_A_D_inv))]
-    ratios_BandMF = [errors_for_A_BandMF[i] / errors_for_A_D_sqrt_inv[i] for i in range(len(errors_for_A_BandMF))]
-    plt.plot(n_range,ratios_AI, label='RMSE ratio of (ii) / (vi)')
-    plt.plot(n_range,ratios_D_toep, label='RMSE ratio of (viii) / (vi)')
-    plt.plot(n_range,ratios_BandMF, label='Expected Mean Error / RMSE of (vi)')
-    plt.xlabel('log(Matrix Size)')
+    ratios_D_A1_sqrt = [errors_for_D_A1_sqrt[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_D_A1_sqrt))]
+    ratios_AI = [errors_for_A_I[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_A_I))]
+    ratios_D_toep = [errors_for_A_D_inv[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_A_D_inv))]
+    ratios_D_toep_sqrt = [errors_for_A_D_sqrt_inv[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_A_D_sqrt_inv))]
+    plt.plot(n_range,ratios_AI, marker='^', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
+    plt.plot(n_range,ratios_AI, marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
+    plt.plot(n_range,ratios_D_toep_sqrt, marker='s' , label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range,ratios_D_toep, marker='D', label='(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    plt.axhline(
+    y=1.0,
+    linestyle='--',
+    label='Optimal'
+    )
+    plt.xlabel('Matrix Size')
     plt.xscale('log')
-    plt.ylabel('RMSE ratio')
+    plt.ylabel('RMSE Ratio to The Optimal Value')
     plt.legend()
     plt.tight_layout()
-    plt.savefig("efficient_error_ratio_vs_log_mat_size.pdf", format="pdf")
+    plt.savefig("plots/efficient_error_ratio_vs_log_mat_size.pdf", format="pdf")
     plt.show()

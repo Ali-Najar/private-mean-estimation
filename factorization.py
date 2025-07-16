@@ -132,7 +132,7 @@ def load_or_compute_sdp(n, A, path="sdp_obj.npz"):
         return obj
     
 
-EXPS = 5
+EXPS = 8
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 
