@@ -6,6 +6,7 @@ dependencies:
   - texlive-core           # full LaTeX engine
   - ghostscript            # PostScript interpreter
   - pip                    # ensure pip is available
+  - numpy
   - cvxpy
   - pip:
     - git+https://github.com/google-deepmind/jax_privacy
