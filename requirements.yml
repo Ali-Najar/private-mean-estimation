@@ -1,13 +1,12 @@
 name: pme
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - matplotlib             # plotting library
   - texlive-core           # full LaTeX engine
-  - dvipng                 # DVI→PNG converter
   - ghostscript            # PostScript interpreter
   - pip                    # ensure pip is available
+  - cvxpy
   - pip:
     - git+https://github.com/google-deepmind/jax_privacy
     - jax>=0.5.1
