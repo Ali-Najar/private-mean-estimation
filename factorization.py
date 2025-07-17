@@ -212,7 +212,7 @@ labels = [
     "(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$",
     "(vii) $\mathbf{D}_{\mathrm{Toep}}^{1/2}, \mathbf{D}_{\mathrm{Toep}}^{-1/2} \mathbf{A}$",
     "(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$",
-    "AOF"
+    "AOF" 
 ]
 
 markers = [None,'o', 's', 'D', '^', 'v', '>', '<', 'p', 'x']
