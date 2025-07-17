@@ -132,7 +132,7 @@ def load_or_compute_sdp(n, A, path="sdp_obj.npz"):
         return obj
     
 
-EXPS = 8
+EXPS = 7
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 
@@ -204,14 +204,14 @@ plt.rcParams.update({
 })
 
 labels = [
-    "(i) $\\mathbf{D} \\mathbf{A}_1^{1/2}, \\mathbf{A}_1^{1/2}$",
-    "(ii) $\\mathbf{A}, \\mathbf{I}$",
-    "(iii) $\\mathbf{I}, \\mathbf{A}$",
-    "(iv) $\\mathbf{A}^{1/2}, \\mathbf{A}^{1/2}$",
-    "(v) $\\mathbf{A}_1^{1/2}, \\mathbf{A}_1^{-1/2} \\mathbf{A}$",
-    "(vi) $\\mathbf{A} \\mathbf{D}_{\mathrm{Toep}}^{-1/2}, \\mathbf{D}_{\mathrm{Toep}}^{1/2}$",
-    "(vii) $\\mathbf{D}_{\mathrm{Toep}}^{1/2}, \\mathbf{D}_{\mathrm{Toep}}^{-1/2} \\mathbf{A}$",
-    "(viii) $\\mathbf{A} \\mathbf{D}_{\mathrm{Toep}}^{-1}, \\mathbf{D}_{\mathrm{Toep}}$",
+    "(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$",
+    "(ii) $\mathbf{A}, \mathbf{I}$",
+    "(iii) $\mathbf{I}, \mathbf{A}$",
+    "(iv) $\mathbf{A}^{1/2}, \mathbf{A}^{1/2}$",
+    "(v) $\mathbf{A}_1^{1/2}, \mathbf{A}_1^{-1/2} \mathbf{A}$",
+    "(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$",
+    "(vii) $\mathbf{D}_{\mathrm{Toep}}^{1/2}, \mathbf{D}_{\mathrm{Toep}}^{-1/2} \mathbf{A}$",
+    "(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$",
     "AOF"
 ]
 
