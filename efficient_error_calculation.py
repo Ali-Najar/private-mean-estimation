@@ -118,7 +118,7 @@ if os.path.exists(BANDED_CACHE_FILE):
     errors_for_A_BandMF     = list(data.get('errors_for_A_BandMF', []))
     prev_len_banded = len(errors_for_A_BandMF)
 
-EXPS = 16
+EXPS = 19
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 
@@ -169,8 +169,6 @@ if prev_len - 1 < EXPS:
         )
 
 if prev_len_banded - 1 < EXPS:
-
-    print(prev_len_banded)
 
     clipped_range_banded = n_range[prev_len_banded:]
 
