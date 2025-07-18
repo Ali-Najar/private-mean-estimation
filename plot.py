@@ -55,12 +55,14 @@ plt.rcParams.update({
     "text.latex.preamble": r"\usepackage{amsmath}"
 })
 
+K = 15
+
 if plot_ratio == False:
-    plt.plot(n_range, errors_for_A_I, marker='^', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
-    plt.plot(n_range, errors_for_A_I, marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
-    plt.plot(n_range, errors_for_A_D_sqrt_inv, marker='s', label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
-    plt.plot(n_range, errors_for_A_D_inv, marker='D', label='RMSE of (viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
-    plt.plot(n_range, errors_for_A_BandMF, label='Optimal')
+    plt.plot(n_range[:K], errors_for_D_A1_sqrt[:K], marker='^', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
+    plt.plot(n_range[:K], errors_for_A_I[:K], marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
+    plt.plot(n_range[:K], errors_for_A_D_sqrt_inv[:K], marker='s', label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range[:K], errors_for_A_D_inv[:K], marker='D', label='RMSE of (viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    plt.plot(n_range[:K], errors_for_A_BandMF[:K], label='Optimal')
     plt.xlabel('Matrix Size')
     plt.xscale('log')
     plt.ylabel('$\mathrm{RMSE}(\mathbf{B},\mathbf{C})$')
@@ -69,14 +71,14 @@ if plot_ratio == False:
     plt.savefig("plots/efficient_error_vs_log_mat_size.pdf", format="pdf")
     plt.show()
 else:
-    ratios_D_A1_sqrt = [errors_for_D_A1_sqrt[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_D_A1_sqrt))]
-    ratios_AI = [errors_for_A_I[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_A_I))]
-    ratios_D_toep = [errors_for_A_D_inv[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_A_D_inv))]
-    ratios_D_toep_sqrt = [errors_for_A_D_sqrt_inv[i] / errors_for_A_BandMF[i] for i in range(len(errors_for_A_D_sqrt_inv))]
-    plt.plot(n_range,ratios_AI, marker='^', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
-    plt.plot(n_range,ratios_AI, marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
-    plt.plot(n_range,ratios_D_toep_sqrt, marker='s' , label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
-    plt.plot(n_range,ratios_D_toep, marker='D', label='(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    ratios_D_A1_sqrt = [errors_for_D_A1_sqrt[i] / errors_for_A_BandMF[i] for i in range(K)]
+    ratios_AI = [errors_for_A_I[i] / errors_for_A_BandMF[i] for i in range(K)]
+    ratios_D_toep = [errors_for_A_D_inv[i] / errors_for_A_BandMF[i] for i in range(K)]
+    ratios_D_toep_sqrt = [errors_for_A_D_sqrt_inv[i] / errors_for_A_BandMF[i] for i in range(K)]
+    plt.plot(n_range[:K],ratios_D_A1_sqrt[:K], marker='o', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
+    plt.plot(n_range[:K],ratios_AI[:K], marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
+    plt.plot(n_range[:K],ratios_D_toep_sqrt[:K], marker='s' , label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range[:K],ratios_D_toep[:K], marker='D', label='(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
     plt.axhline(
     y=1.0,
     linestyle='--',
