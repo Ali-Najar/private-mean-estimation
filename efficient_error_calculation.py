@@ -86,8 +86,10 @@ def reverse_cumsum_inv_squares(n):
     return rev_cum[::-1]
 
 
+bandW = 128
+
 CACHE_FILE = 'cache/efficient_error_data.npz'
-BANDED_CACHE_FILE = 'cache/efficient_banded_cache.npz'
+BANDED_CACHE_FILE = f'cache/efficient_banded_cache_{bandW}.npz'
 import os
 
 prev_len = 0
@@ -118,7 +120,7 @@ if os.path.exists(BANDED_CACHE_FILE):
     errors_for_A_BandMF     = list(data.get('errors_for_A_BandMF', []))
     prev_len_banded = len(errors_for_A_BandMF)
 
-EXPS = 18
+EXPS = 17
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 
@@ -174,7 +176,7 @@ if prev_len_banded - 1 < EXPS:
 
     for N in clipped_range_banded:
         print(f"Processing N={N} for banded matrix factorization...")
-        error_BandMF = Band_matrix_factorization(N, min(N, 128), steps=10)
+        error_BandMF = Band_matrix_factorization(N, min(N, bandW), steps=10)
         errors_for_A_BandMF.append(error_BandMF)
         print(error_BandMF)
     print(errors_for_A_BandMF)
