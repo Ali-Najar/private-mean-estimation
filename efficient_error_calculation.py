@@ -121,7 +121,7 @@ if os.path.exists(BANDED_CACHE_FILE):
     errors_for_A_BandMF     = list(data.get('errors_for_A_BandMF', []))
     prev_len_banded = len(errors_for_A_BandMF)
 
-EXPS = 17
+EXPS = 15
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 
@@ -134,11 +134,12 @@ if prev_len - 1 < EXPS:
 
         print(f"Processing N={N}...")
 
+        inv_squares_cumsum = reverse_cumsum_inv_squares(N)
         # D A1_sqrt , A1_sqrt
         A1_sqrt = compute_mat_sqrt(N, Toep=False)
-        F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, 1.0 / np.arange(1, N+1, dtype=np.float64))
+        F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, inv_squares_cumsum)
+        # F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, 1.0 / np.arange(1, N+1, dtype=np.float64))
         errors_for_D_A1_sqrt.append(1/np.sqrt(N) * np.sqrt(F_norm_D_A1_sqrt) * np.linalg.norm(A1_sqrt))
-
         # A I / I
         ordered_array = np.arange(1, N + 1, dtype=np.float64)
         H = np.cumsum(1.0 / ordered_array)
@@ -149,7 +150,6 @@ if prev_len - 1 < EXPS:
         D_toep_sqrt = compute_mat_sqrt(N, Toep=True)
         D_toep_sqrt_inv = invert_toeplitz_first_column(D_toep_sqrt)
         cumsum_D_toep_sqrt_inv_sqr = np.cumsum(D_toep_sqrt_inv)**2
-        inv_squares_cumsum = reverse_cumsum_inv_squares(N)
         F_norm_A_D_sqrt_inv = np.dot(cumsum_D_toep_sqrt_inv_sqr, inv_squares_cumsum)
         errors_for_A_D_sqrt_inv.append(1/np.sqrt(N) * np.sqrt(F_norm_A_D_sqrt_inv) * np.linalg.norm(D_toep_sqrt))
 
