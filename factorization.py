@@ -132,10 +132,11 @@ def load_or_compute_sdp(n, A, path="sdp_obj.npz"):
         return obj
     
 
-EXPS = 8
+EXPS = 11
+EXPS_AOF = 9
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
-
+n_range_aof = 2**np.arange(0, EXPS_AOF + 1)   # 2^0 ... 2^9 = 512
 number_of_plots = 10
 
 res = {i:[] for i in range(1,number_of_plots+1)}
@@ -174,14 +175,14 @@ for n in n_range:
 
     # 8. A @ D_toep^{-1}, D_toep
     res[8].append(obj(A @ la.inv(Dtp), Dtp))
-    
+
+for n in n_range_aof:
     # 9. AOF
     B, C, obj_value = load_or_compute_aof(A, path=f"cache/my_aof_{n}.npz")
     res[9].append(obj_value)
     
     # sdp_obj = load_or_compute_sdp(n, A, path=f"sdp_obj_{n}.npz")
     # res[9].append(sdp_obj)
-
 
     print(f"n={n}")
 
@@ -234,7 +235,10 @@ for i in range(1,number_of_plots):
         plt.plot(n_range, ratio_vi_aof, label='(vi)', linestyle='--')
         plt.plot(n_range, ratio_viii_aof, label='(viii)', linestyle='--')   
     else:
-        plt.plot(n_range, res[i], marker=markers[i] , label=labels[i-1])
+        if i == 9:
+            plt.plot(n_range_aof, res[i], marker=markers[i] , label=labels[i-1])
+        else:
+            plt.plot(n_range, res[i], marker=markers[i] , label=labels[i-1])
 
 plt.xlabel('Matrix Size')
 if plot_log_scale:
