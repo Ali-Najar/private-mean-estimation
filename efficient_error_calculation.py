@@ -176,7 +176,7 @@ if prev_len_banded - 1 < EXPS:
         print(f"Processing N={N} for banded matrix factorization...")
         error_BandMF = Band_matrix_factorization(N, min(N, 128), steps=10)
         errors_for_A_BandMF.append(error_BandMF)
-
+    print(errors_for_A_BandMF)
     # Save the results
     np.savez_compressed(
             BANDED_CACHE_FILE,
