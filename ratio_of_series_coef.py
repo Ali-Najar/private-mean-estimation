@@ -19,17 +19,17 @@ def compute_b(N):
         b[n] = (1.0/(n+1) - s) * 0.5
     return b
 
-N = 1000  
+N = 100000
 b = compute_b(N)  
 n_vals = np.arange(N)
-inv_x = 1.0 / (n_vals + 1)             # 1/(n+1) to avoid division by zero at n = 0
+inv_x = 1.0 / ((n_vals + 1) * np.sqrt(np.log(n_vals + 1)+1))        # 1/(n+1) to avoid division by zero at n = 0
 # sqrt_x = 1/5 * np.sqrt(n_vals + 1)            
 ratios = [(inv_x[n] / b[n]) for n in range(N)]
 
 plt.figure(figsize=(6, 4))
 # plt.plot(n_vals[:N], ratio, label=r'$b_k1$')
 plt.plot(n_vals, ratios, label=r'$ratio of b_k and 1/k$')
-plt.xscale('log')
+# plt.xscale('log')
 # plt.plot(n_vals, sqrt_x, label=r'$sqrt k$')
 # plt.plot(n_vals[80:], SS[80:], label=r'$prod$')
 # plt.plot(n_vals[120:], coeffs[120:], label=r'$b_n$ (coefficients)')
