@@ -174,7 +174,7 @@ if prev_len_banded - 1 < EXPS:
 
     for N in clipped_range_banded:
         print(f"Processing N={N} for banded matrix factorization...")
-        error_BandMF = Band_matrix_factorization(N, min(N, 256), steps=10)
+        error_BandMF = Band_matrix_factorization(N, min(N, 128), steps=10)
         errors_for_A_BandMF.append(error_BandMF)
 
     # Save the results
