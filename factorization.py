@@ -133,7 +133,7 @@ def load_or_compute_sdp(n, A, path="sdp_obj.npz"):
     
 
 EXPS = 11
-EXPS_AOF = 9
+EXPS_AOF = 8
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 n_range_aof = 2**np.arange(0, EXPS_AOF + 1)   # 2^0 ... 2^9 = 512
@@ -199,6 +199,9 @@ plt.rcParams.update({
     "font.serif":     ["Computer Modern Roman"],
     # match your desired size/weight
     "font.size":      14,
+    "axes.labelsize": 22,   # x/y label font size
+    "xtick.labelsize": 20,  # x tick font size
+    "ytick.labelsize": 20,  # y tick font size
     "font.weight":    "normal",
     # ensure math uses the same font
     "text.latex.preamble": r"\usepackage{amsmath} \usepackage{amssymb} \usepackage{amsfonts}"
@@ -216,15 +219,26 @@ labels = [
     "AOF" 
 ]
 
-markers = [None,'o', 's', 'D', '^', 'v', '>', '<', 'p', 'x']
-
+markers = [None,'o', 's', 'p', '^', 'v', '>', '<', 'D', 'x']
+colors = [
+    None,
+    'tab:blue',   # 1
+    'tab:orange', # 2
+    'tab:cyan',  # 3
+    'tab:brown',  # 4
+    'tab:purple', # 5
+    'tab:green',    # 6
+    'tab:pink',   # 7
+    'tab:red',   # 8
+    'tab:olive',  # 9
+]
 plot_all = True
 plot_ratios = False
 plot_log_scale = True
 
-ratio_ii_aof = [res[2][i] / res[9][i] for i in range(len(res[2]))]
-ratio_vi_aof = [res[6][i] / res[9][i] for i in range(len(res[6]))]
-ratio_viii_aof = [res[8][i] / res[9][i] for i in range(len(res[8]))]
+ratio_ii_aof = [res[2][i] / res[9][i] for i in range(len(res[9]))]
+ratio_vi_aof = [res[6][i] / res[9][i] for i in range(len(res[9]))]
+ratio_viii_aof = [res[8][i] / res[9][i] for i in range(len(res[9]))]
 # ratio_sdp = [res[6][i] / res[9][i] for i in range(len(res[6]))]
 
 for i in range(1,number_of_plots):
@@ -236,16 +250,16 @@ for i in range(1,number_of_plots):
         plt.plot(n_range, ratio_viii_aof, label='(viii)', linestyle='--')   
     else:
         if i == 9:
-            plt.plot(n_range_aof, res[i], marker=markers[i] , label=labels[i-1])
+            plt.plot(n_range_aof, res[i], marker=markers[i], color=colors[i], label=labels[i-1],  markersize=10)
         else:
-            plt.plot(n_range, res[i], marker=markers[i] , label=labels[i-1])
+            plt.plot(n_range, res[i], marker=markers[i], color=colors[i] , label=labels[i-1],  markersize=10)
 
 plt.xlabel('Matrix Size')
 if plot_log_scale:
     plt.xscale('log')
-plt.ylabel('$\mathrm{RMSE}(\mathbf{B},\mathbf{C})$')
+plt.ylabel('$\mathcal{E}(\mathbf{B},\mathbf{C})$')
 plt.legend()
-plt.tight_layout()
+plt.tight_layout(pad=0)
 savefile_name = "error_vs_log_mat_size.pdf" if plot_log_scale else "error_vs_mat_size.pdf"
 savefile_name = "ratio_" + savefile_name if plot_ratios else savefile_name
 savefile_name = os.path.join("plots", savefile_name)
