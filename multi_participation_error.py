@@ -2,7 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import scipy.linalg as la
-def sens(C: np.ndarray, k: int, b: int) -> float:
+
+def sens(C: np.ndarray, k: int, b: int):
 
     # pick out the k columns [0, b, 2b, ..., (k-1)b]
     M = C[:, :k*b:b]
@@ -30,21 +31,68 @@ def generate_D_toep(n):
     return M
 
 
+def banded(C: np.ndarray, p: int):
+
+    C = np.asarray(C)
+    n = C.shape[0]
+
+    # build mask: True when i-j < p, False otherwise
+    i = np.arange(n)[:, None]
+    j = np.arange(n)[None, :]
+    mask = (i - j) < p
+
+    # apply mask
+    Cb = C.copy()
+    Cb[~mask] = 0
+    return Cb
+
 def obj(B, C, k ,b):
     n = B.shape[0]
     return np.linalg.norm(B,'fro') * sens(C, k, b) / np.sqrt(n)
 
+def bsr_obj(A, C, k, b, p):
+    
+    C_p = banded(C, p)
+    C_p_inv = la.inv(C_p)
+    return obj(A @ C_p_inv, C_p, k, b)
 
+def bisr_obj(A, C, k, b, p):
 
-EXPS = 9
+    C_inv = la.inv(C)
+    C_p_inv = banded(C_inv, p)
+    new_C = la.inv(C_p_inv)
+    return obj(A @ C_p_inv, new_C, k, b)
+
+import pickle
+
+EXPS = 13
 k_values = [4,16,64]
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
 # n_range_aof = 2**np.arange(0, EXPS_AOF + 1)   # 2^0 ... 2^9 = 512
 number_of_plots = 4
+number_of_plots_banded = 3
+cache_path = 'cache/multi_res_cache.pkl'
+banded_cache_path = 'cache/multi_banded_cache.pkl'
 
-res = {k:{i:[] for i in range(1,number_of_plots+1)} for k in k_values}
 
+# -- Caching setup ---------------------------------------------------------
+if os.path.exists(banded_cache_path):
+    with open(banded_cache_path, 'rb') as f:
+        res_banded = pickle.load(f)
+    print("Loaded cached banded results.")
+else:
+    res_banded = {k: {"bisr": {i: {} for i in range(1, number_of_plots_banded + 1)}, "bsr": {i: {} for i in range(1, number_of_plots_banded + 1)}} for k in k_values}
+    
+    print("Initialized empty banded cache.")
+    
+if os.path.exists(cache_path):
+    with open(cache_path, 'rb') as f:
+        res = pickle.load(f)
+    print("Loaded cached results.")
+else:
+    res = {k: {i: {} for i in range(1, number_of_plots + 1)} for k in k_values}
+    print("Initialized empty cache.")
 
 for n in n_range:
     A    = generate_A(n)
@@ -53,9 +101,12 @@ for n in n_range:
     Dtp  = generate_D_toep(n)
     I    = np.eye(n)
 
+
     A1_s = la.sqrtm(A1)
     Dtp_s  = la.sqrtm(Dtp)
     Dtp_is = la.inv(Dtp_s)
+
+    
 
     for k in k_values:
         if k > n:
@@ -64,17 +115,41 @@ for n in n_range:
         b = n // k
 
         # 1. D @ A1^½, A1^½
-        res[k][1].append(obj(D @ A1_s, A1_s, k, b))
+        if n not in res[k][1]:
+            res[k][1][n] = obj(D @ A1_s, A1_s, k, b)
 
-        res[k][2].append(obj(A, I, k, b))
+        if n not in res[k][2]:
+            res[k][2][n] = obj(A, I, k, b)
 
         # 6. A @ D_toep^{-½}, D_toep^½
-        res[k][3].append(obj(A @ Dtp_is, Dtp_s, k, b))
+        if n not in res[k][3]:
+            res[k][3][n] = obj(A @ Dtp_is, Dtp_s, k, b)
 
         # 8. A @ D_toep^{-1}, D_toep
-        res[k][4].append(obj(A @ la.inv(Dtp), Dtp, k, b))
+        if n not in res[k][4]:
+            res[k][4][n] = obj(A @ la.inv(Dtp), Dtp, k, b)
 
-    print(f"n={n}")
+        p = b
+        if n not in res_banded[k]['bisr'][1]:
+            res_banded[k]['bisr'][1][n] = bisr_obj(A, Dtp_s, k, b, p)
+        if n not in res_banded[k]['bisr'][2]:
+            res_banded[k]['bisr'][2][n] = bisr_obj(A, Dtp, k, b, p)
+        if n not in res_banded[k]['bisr'][3]:
+            res_banded[k]['bisr'][3][n] = bisr_obj(A, A1_s, k, b, p)
+        
+        if n not in res_banded[k]['bsr'][1]:
+            res_banded[k]['bsr'][1][n] = bsr_obj(A, Dtp_s, k, b, p)
+        if n not in res_banded[k]['bsr'][2]:
+            res_banded[k]['bsr'][2][n] = bsr_obj(A, Dtp, k, b, p)
+        if n not in res_banded[k]['bsr'][3]:
+            res_banded[k]['bsr'][3][n] = bsr_obj(A, A1_s, k, b, p)
+        
+
+    print(f"Completed n={n}")
+    with open(cache_path, 'wb') as f:
+        pickle.dump(res, f)
+    with open(banded_cache_path, 'wb') as f:
+        pickle.dump(res_banded, f)
 
 for k in k_values:
 
@@ -106,7 +181,22 @@ for k in k_values:
         "(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$",
     ]
 
+    labels_bsr = [
+        "(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$ (BSR)",
+        "(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$ (BSR)",
+        " $\mathbf{A} \mathbf{A}_{1}^{-1/2}, \mathbf{A}_{1}^{1/2}$ (BSR)",
+    ]
+    labels_bisr = [
+        "(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$ (BISR)",
+        "(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$ (BISR)",
+        " $\mathbf{A} \mathbf{A}_{1}^{-1/2}, \mathbf{A}_{1}^{1/2}$ (BISR)",
+    ]
+
     markers = [None,'o', 's', '>', 'D']
+
+    markers_bsr = [None, '^', 'v', '<']
+    markers_bisr = [None, '+', 'x', ',']
+    
     colors = [
         None,
         'tab:blue',   # 1
@@ -114,19 +204,56 @@ for k in k_values:
         'tab:green',    # 6
         'tab:red',   # 8
     ]
+
+    colors_bsr = [
+        None,
+        'tab:brown',
+        'tab:olive',
+        'teal',
+    ]
+    colors_bisr = [
+        None,
+        'tab:purple',
+        'tab:cyan',
+        'tab:pink',
+    ]
+
     plot_all = True
     plot_log_scale = True
+    plot_ratio = True
 
+    
     for i in range(1,number_of_plots+1):
-        plt.plot(n_range[EXPS - len(res[k][i]) + 1:], res[k][i], marker=markers[i], color=colors[i] , label=labels[i-1],  markersize=10)
- 
+
+        ns = sorted(res[k][i].keys())
+        if plot_ratio:
+            ys = [res[k][i][n] / res_banded[k]['bsr'][2][n] for n in ns]
+        else:
+            ys = [res[k][i][n] for n in ns]
+        plt.plot(ns, ys, marker=markers[i], color=colors[i] , label=labels[i-1],  markersize=10)
+
+    for i in range(1, number_of_plots_banded + 1):
+        ns = sorted(res_banded[k]['bsr'][i].keys())
+        if plot_ratio:
+            ys = [res_banded[k]['bsr'][i][n] / res_banded[k]['bsr'][2][n] for n in ns]
+        else:
+            ys = [res_banded[k]['bsr'][i][n] for n in ns]
+        plt.plot(ns, ys, marker=markers_bsr[i], color=colors_bsr[i] , label=labels_bsr[i-1],  markersize=10)
+
+        ns = sorted(res_banded[k]['bisr'][i].keys())
+        if plot_ratio:
+            ys = [res_banded[k]['bisr'][i][n] / res_banded[k]['bsr'][2][n] for n in ns]
+        else: 
+            ys = [res_banded[k]['bisr'][i][n] for n in ns]
+        plt.plot(ns, ys, marker=markers_bisr[i], color=colors_bisr[i] , label=labels_bisr[i-1],  markersize=10)
+
     plt.xlabel('Matrix Size')
     if plot_log_scale:
         plt.xscale('log')
     plt.ylabel('$\mathcal{E}(\mathbf{B},\mathbf{C})$')
     plt.legend()
     plt.tight_layout(pad=0)
-    savefile_name = f"_multi_error_vs_mat_size_k{k}.pdf"
+    savefile_name = f"_multi_error_vs_mat_size_k{k}_ratio{plot_ratio}.pdf"
     savefile_name = os.path.join("plots", savefile_name)
     plt.savefig(savefile_name, format="pdf")
 # plt.show()
