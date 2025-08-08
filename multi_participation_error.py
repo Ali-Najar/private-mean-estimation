@@ -108,7 +108,7 @@ for n in n_range:
                 flag = False
                 break
         for i in range(1, number_of_plots_banded + 1):
-            if n not in res_banded[k]['bisr'][i] or n not in res_banded['bsr'][i]:
+            if n not in res_banded[k]['bisr'][i] or n not in res_banded[k]['bsr'][i]:
                 flag = False
                 break
     
