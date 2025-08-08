@@ -1,68 +1,8 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 import os
-import scipy.linalg as la
+import matplotlib.pyplot as plt
 
-def sens(C: np.ndarray, k: int, b: int):
-
-    # pick out the k columns [0, b, 2b, ..., (k-1)b]
-    M = C[:, :k*b:b]
-    # form matrix G = M^T M, then sum all entries
-    G = M.T @ M 
-    return np.sqrt(float(np.sum(G)))
-
-def generate_A(n):
-    A = np.zeros((n,n))
-    for i in range(n):
-        A[i,:i+1] = 1.0/(i+1)
-    return A
-
-def generate_D(n):
-    return np.diag(1.0/np.arange(1,n+1))
-
-def generate_A1(n):
-    return np.tri(n)
-
-def generate_D_toep(n):
-    M = np.zeros((n,n))
-    for i in range(n):
-        for j in range(i+1):
-            M[i,j] = 1.0/(i-j+1)
-    return M
-
-
-def banded(C: np.ndarray, p: int):
-
-    C = np.asarray(C)
-    n = C.shape[0]
-
-    # build mask: True when i-j < p, False otherwise
-    i = np.arange(n)[:, None]
-    j = np.arange(n)[None, :]
-    mask = (i - j) < p
-
-    # apply mask
-    Cb = C.copy()
-    Cb[~mask] = 0
-    return Cb
-
-def obj(B, C, k ,b):
-    n = B.shape[0]
-    return np.linalg.norm(B,'fro') * sens(C, k, b) / np.sqrt(n)
-
-def bsr_obj(A, C, k, b, p):
-    
-    C_p = banded(C, p)
-    C_p_inv = la.inv(C_p)
-    return obj(A @ C_p_inv, C_p, k, b)
-
-def bisr_obj(A, C, k, b, p):
-
-    C_inv = la.inv(C)
-    C_p_inv = banded(C_inv, p)
-    new_C = la.inv(C_p_inv)
-    return obj(A @ C_p_inv, new_C, k, b)
 
 
 EXPS = 15
@@ -94,83 +34,6 @@ else:
     res = {k: {i: {} for i in range(1, number_of_plots + 1)} for k in k_values}
     print("Initialized empty cache.")
 
-for n in n_range:
-
-    flag = True
-
-    for k in k_values:
-        if k > n:
-            continue    
-
-        b = n // k
-        for i in range(1, number_of_plots + 1):
-            if n not in res[k][i]:
-                flag = False
-                break
-        for i in range(1, number_of_plots_banded + 1):
-            if n not in res_banded[k]['bisr'][i] or n not in res_banded['bsr'][i]:
-                flag = False
-                break
-    
-    if flag:
-        print(f"Completed n={n}")
-        continue
-
-    A    = generate_A(n)
-    D    = generate_D(n)
-    A1   = generate_A1(n)
-    Dtp  = generate_D_toep(n)
-    I    = np.eye(n)
-
-
-    A1_s = la.sqrtm(A1)
-    Dtp_s  = la.sqrtm(Dtp)
-    Dtp_is = la.inv(Dtp_s)
-
-    
-
-    for k in k_values:
-        if k > n:
-            continue    
-
-        b = n // k
-
-        # 1. D @ A1^½, A1^½
-        if n not in res[k][1]:
-            res[k][1][n] = obj(D @ A1_s, A1_s, k, b)
-
-        if n not in res[k][2]:
-            res[k][2][n] = obj(A, I, k, b)
-
-        # 6. A @ D_toep^{-½}, D_toep^½
-        if n not in res[k][3]:
-            res[k][3][n] = obj(A @ Dtp_is, Dtp_s, k, b)
-
-        # 8. A @ D_toep^{-1}, D_toep
-        if n not in res[k][4]:
-            res[k][4][n] = obj(A @ la.inv(Dtp), Dtp, k, b)
-
-        p = b
-        if n not in res_banded[k]['bisr'][1]:
-            res_banded[k]['bisr'][1][n] = bisr_obj(A, Dtp_s, k, b, p)
-        if n not in res_banded[k]['bisr'][2]:
-            res_banded[k]['bisr'][2][n] = bisr_obj(A, Dtp, k, b, p)
-        if n not in res_banded[k]['bisr'][3]:
-            res_banded[k]['bisr'][3][n] = bisr_obj(A, A1_s, k, b, p)
-        
-        if n not in res_banded[k]['bsr'][1]:
-            res_banded[k]['bsr'][1][n] = bsr_obj(A, Dtp_s, k, b, p)
-        if n not in res_banded[k]['bsr'][2]:
-            res_banded[k]['bsr'][2][n] = bsr_obj(A, Dtp, k, b, p)
-        if n not in res_banded[k]['bsr'][3]:
-            res_banded[k]['bsr'][3][n] = bsr_obj(A, A1_s, k, b, p)
-        
-
-    print(f"Completed n={n}")
-    with open(cache_path, 'wb') as f:
-        pickle.dump(res, f)
-    with open(banded_cache_path, 'wb') as f:
-        pickle.dump(res_banded, f)
 
 for k in k_values:
 
