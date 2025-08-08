@@ -65,7 +65,7 @@ def bisr_obj(A, C, k, b, p):
 
 import pickle
 
-EXPS = 13
+EXPS = 15
 k_values = [4,16,64]
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
@@ -95,6 +95,27 @@ else:
     print("Initialized empty cache.")
 
 for n in n_range:
+
+    flag = True
+
+    for k in k_values:
+        if k > n:
+            continue    
+
+        b = n // k
+        for i in range(1, number_of_plots + 1):
+            if n not in res[k][i]:
+                flag = False
+                break
+        for i in range(1, number_of_plots_banded + 1):
+            if n not in res_banded[k]['bisr'][i] or n not in res_banded['bsr'][i]:
+                flag = False
+                break
+    
+    if flag:
+        print(f"Completed n={n}")
+        continue
+
     A    = generate_A(n)
     D    = generate_D(n)
     A1   = generate_A1(n)
