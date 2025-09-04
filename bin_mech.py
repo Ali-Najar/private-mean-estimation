@@ -198,6 +198,7 @@ class ContinualMeanEstimator:
         n = self.n_max
         L = self.L
         Delta_ell = self.Delta.get(ell, 1.0)
+        print(Delta_ell)
         return (4.0 * Delta_ell * (1.0 + math.log(max(n, 2))) * (L + 1)) / max(self.epsilon, 1e-12)
 
     def _activation_threshold(self, ell: int) -> int:
@@ -301,13 +302,6 @@ class ContinualMeanEstimator:
         return lhs >= rhs
 
     def current_state(self) -> Dict[str, float]:
-
-        ell = 2
-        left_unit = 2 ** max(ell - 1, 0)
-        lhs = 0
-        for u, cnt in self.user_counts.items():
-            lhs += min(cnt, left_unit)
-        print(lhs)
         return {
             "L": self.L,
             "M_t": self.M_t,
@@ -317,12 +311,12 @@ class ContinualMeanEstimator:
         }
 
 
-random.seed(7)
-n = 2048
-m = 32
+random.seed(2)
+n = 40480
+m = 10
 p = 0.35
 eps = 1.0
-delta = 1e-3
+delta = 0.5
 
 est = ContinualMeanEstimator(n_max=n, m_max=m, epsilon=eps, delta=delta)
 
@@ -346,3 +340,39 @@ for t, (u, x) in enumerate(stream, start=1):
         print(f"t={t:4d}  mu_hat={mu_hat:.4f}  true_mean_so_far={true_sum/t:.4f}  state={est.current_state()}")
 
 print("Done.")
+
+import matplotlib.pyplot as plt
+
+def plot_estimation_error(mu_hats, xs, p=None, title=None, use_log_y=False):
+    """
+    Plot |mu_hat_t - true_mean_t| over time.
+
+    Args:
+        mu_hats: list of DP estimates [mu_hat_1, ..., mu_hat_T]
+        xs:      list of observed samples [x_1, ..., x_T] (same length/order)
+        p:       float or None. If provided, uses this as the true mean.
+                 If None, uses empirical mean so far (sum_{i<=t} x_i / t).
+        title:   optional plot title (str)
+        use_log_y: bool, if True sets y-axis to log-scale
+    """
+    assert len(mu_hats) == len(xs), "mu_hats and xs must have same length"
+    errors = []
+    csum = 0.0
+    for t, (mh, x) in enumerate(zip(mu_hats, xs), start=1):
+        csum += x
+        true_mean_t = p if p is not None else (csum / t)
+        errors.append(abs(mh - true_mean_t))
+
+    plt.figure()
+    plt.plot(range(1, len(errors) + 1), errors)
+    if use_log_y:
+        plt.yscale("log")
+    plt.xlabel("t")
+    # plt.xscale("log")
+    plt.ylabel("|mu_hat - true_mean|")
+    if title:
+        plt.title(title)
+    plt.tight_layout()
+    plt.show()
+
+plot_estimation_error(estimates, range(n*m), p=p, title="Estimation error over time", use_log_y=True)
