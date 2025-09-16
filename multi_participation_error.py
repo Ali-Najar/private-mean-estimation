@@ -65,7 +65,7 @@ def bisr_obj(A, C, k, b, p):
     return obj(A @ C_p_inv, new_C, k, b)
 
 
-EXPS = 12
+EXPS = 13
 k_values = [4,16,64]
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents

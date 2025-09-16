@@ -246,7 +246,7 @@ def obj_bisr(n, k, b, p, C_kind):
     return (frobB * sensC) / np.sqrt(n)
 
 # ------------------------ experiment grid ------------------------
-EXPS = 16
+EXPS = 15
 k_values = [4,16,64]
 exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
 n_range   = 2**exponents
@@ -282,7 +282,10 @@ def n_is_complete(n: int) -> bool:
         if k > n:
             continue
         b = n // k
-        p = b  # directory convention
+        if set_p_eq_b:
+            p = b
+        elif set_p_eq_logb:
+            p = max(1, int(np.log2(b)))
 
         # nonbanded: i1..i4
         for i in range(1, number_of_plots + 1):
@@ -424,6 +427,12 @@ def load_curve(kind: str, i: int, k: int, n_values) -> dict[int, float]:
             continue
         b = n // k
         p = _p_from_b(b)
+        if kind == "nonbanded" and i == 1:
+            p = max(1, int(np.log2(b)))
+        if kind == "banded" and i == 3:
+            p = max(1, int(np.log2(b)))
+        if kind == "banded inverse" and i == 3:
+            p = max(1, int(np.log2(b)))
         if has_value(n=n, kind=kind, b=b, p=p, name=name):
             out[n] = load_value(n=n, kind=kind, b=b, p=p, name=name)
     return out
@@ -444,7 +453,7 @@ for k in k_values:
     })
 
     labels = [
-        "(i) $\\mathbf{D} \\mathbf{A}_1^{1/2}, \\mathbf{A}_1^{1/2}$",
+        "$\\mathbf{A}_1^{1/2}$",
         "$\\mathbf{I}$",
         "(vi) $\\mathbf{A} \\mathbf{D}_{\\mathrm{Toep}}^{-1/2}, \\mathbf{D}_{\\mathrm{Toep}}^{1/2}$",
         "$\\mathbf{D}_{\\mathrm{Toep}}$",
@@ -452,21 +461,21 @@ for k in k_values:
     labels_bsr = [
         "$\\mathbf{D}_{\\mathrm{Toep}}^{1/2}$ (Banded)",
         "$\\mathbf{D}_{\\mathrm{Toep}}$ (Banded)",
-        "$\\mathbf{A} \\mathbf{A}_{1}^{-1/2}, \\mathbf{A}_{1}^{1/2}$ (BSR)",
+        "$\\mathbf{A}_{1}^{1/2}$ (Banded)",
     ]
     labels_bisr = [
         "$\\mathbf{D}_{\\mathrm{Toep}}^{1/2}$ (Banded Inverse)",
         "$\\mathbf{D}_{\\mathrm{Toep}}$ (Banded Inverse)",
-        "$\\mathbf{A} \\mathbf{A}_{1}^{-1/2}, \\mathbf{A}_{1}^{1/2}$ (BISR)",
+        "$\\mathbf{A}_{1}^{1/2}$ (Banded Inverse)",
     ]
 
     markers      = [None, 'o', 's', '>', 'D']         # 1..4
-    markers_bsr  = [None, 'd', 'x', '+']              # 1..3
-    markers_bisr = [None, '^', 'v', ',']              # 1..3
+    markers_bsr  = [None, 'd', 'x', '>']              # 1..3
+    markers_bisr = [None, '^', 'o', '<']              # 1..3
 
     colors      = [None, 'tab:cyan', 'tab:orange', 'tab:green', 'tab:red']
-    colors_bsr  = [None, 'tab:olive', 'tab:brown', 'teal']
-    colors_bisr = [None, 'tab:purple', 'tab:blue', 'tab:pink']
+    colors_bsr  = [None, 'tab:olive', 'tab:brown', 'purple']
+    colors_bisr = [None, 'tab:purple', 'tab:blue', 'tab:orange']
 
     plot_log_scale = True
     plot_ratio = True
@@ -484,7 +493,7 @@ for k in k_values:
         plt.plot(ns, ys, marker=markers[i], color=colors[i], label=labels[i-1], markersize=10)
 
     # --- banded inverse (BISR) i=1,2 (skip 3 to match your original) ---
-    for i in (1, 2):
+    for i in (2, 3):
         bisr_i = load_curve("banded inverse", i, k, n_range)
         ns = sorted(set(bisr_i.keys()) & denom_ns) if plot_ratio else sorted(bisr_i.keys())
         if not ns:
@@ -493,7 +502,7 @@ for k in k_values:
         plt.plot(ns, ys, marker=markers_bisr[i], color=colors_bisr[i], label=labels_bisr[i-1], markersize=10)
 
     # --- banded (BSR) i=1,2 (skip 3) ---
-    for i in (1, 2):
+    for i in (2, 3):
         bsr_i = load_curve("banded", i, k, n_range)
         ns = sorted(set(bsr_i.keys()) & denom_ns) if plot_ratio else sorted(bsr_i.keys())
         if not ns:
@@ -514,7 +523,7 @@ for k in k_values:
         p_name = "p=logb"
     else:
         p_name = f"p={p}"
-    savefile_name = f"_multi_error_vs_mat_size_k{k}_{p_name}_ratio{plot_ratio}.pdf"
+    savefile_name = f"_multi_error_vs_mat_size{2**EXPS}_k{k}_{p_name}_ratio{plot_ratio}.pdf"
     savefile_name = os.path.join("plots", savefile_name)
     plt.savefig(savefile_name, format="pdf")
     plt.close()

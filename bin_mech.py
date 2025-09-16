@@ -310,69 +310,112 @@ class ContinualMeanEstimator:
             "inactive_scales": len(self.inactive),
         }
 
+from pathlib import Path
+import numpy as np
+import random, time, csv
 
-random.seed(2)
-n = 40480
-m = 10
-p = 0.35
-eps = 1.0
-delta = 0.5
+SEED  = 50
+EXP   = 19
+p     = 0.5
+eps   = 1.0
+delta = 1e-3
 
-est = ContinualMeanEstimator(n_max=n, m_max=m, epsilon=eps, delta=delta)
+T = 2 ** EXP
+m_values = [8, 32, 64]
 
-# Build a randomized arrival order (arbitrary user order allowed)
-stream: List[Tuple[int, float]] = []  # (user, sample)
-for u in range(n):
-    k = m  # each user contributes m samples
-    for _ in range(k):
-        x = 1.0 if random.random() < p else 0.0
-        stream.append((u, x))
-random.shuffle(stream)
+rows = []
 
-# Run the continual estimator
-estimates = []
-true_sum = 0.0
-for t, (u, x) in enumerate(stream, start=1):
-    true_sum += x
-    mu_hat = est.update(x_t=x, u_t=u)
-    estimates.append(mu_hat)
-    if t % 100 == 0:
-        print(f"t={t:4d}  mu_hat={mu_hat:.4f}  true_mean_so_far={true_sum/t:.4f}  state={est.current_state()}")
+for m in m_values:
+    n_users = T // m  
 
-print("Done.")
+    outdir = Path(f"cache/bin_mech_algo/mu{p:g}")
+    outdir.mkdir(parents=True, exist_ok=True)
 
-import matplotlib.pyplot as plt
+    print(f"\n=== Running m={m} ===")
+    print(f"T = {T:,} steps, users = {n_users:,}, seeds = {SEED}")
 
-def plot_estimation_error(mu_hats, xs, p=None, title=None, use_log_y=False):
-    """
-    Plot |mu_hat_t - true_mean_t| over time.
+    times = []
 
-    Args:
-        mu_hats: list of DP estimates [mu_hat_1, ..., mu_hat_T]
-        xs:      list of observed samples [x_1, ..., x_T] (same length/order)
-        p:       float or None. If provided, uses this as the true mean.
-                 If None, uses empirical mean so far (sum_{i<=t} x_i / t).
-        title:   optional plot title (str)
-        use_log_y: bool, if True sets y-axis to log-scale
-    """
-    assert len(mu_hats) == len(xs), "mu_hats and xs must have same length"
-    errors = []
-    csum = 0.0
-    for t, (mh, x) in enumerate(zip(mu_hats, xs), start=1):
-        csum += x
-        true_mean_t = p if p is not None else (csum / t)
-        errors.append(abs(mh - true_mean_t))
+    for s in range(SEED):
+        random.seed(s)
 
-    plt.figure()
-    plt.plot(range(1, len(errors) + 1), errors)
-    if use_log_y:
-        plt.yscale("log")
-    plt.xlabel("t")
-    # plt.xscale("log")
-    plt.ylabel("|mu_hat - true_mean|")
-    if title:
-        plt.title(title)
-    plt.tight_layout()
-    plt.show()
+        est = ContinualMeanEstimator(n_max=n_users, m_max=m, epsilon=eps, delta=delta)
 
-plot_estimation_error(estimates, range(n*m), p=p, title="Estimation error over time", use_log_y=True)
+        stream = []
+        for u in range(n_users):
+            for _ in range(m):
+                x = 1.0 if random.random() < p else 0.0
+                stream.append((u, x))
+        random.shuffle(stream)
+
+        t0 = time.perf_counter()
+
+        estimates = []
+        for (u, x) in stream:
+            mu_hat = est.update(x_t=x, u_t=u)
+            estimates.append(mu_hat)
+
+        dt = time.perf_counter() - t0
+        times.append(dt)
+
+        arr = np.asarray(estimates, dtype=np.float32)
+        save_path = outdir / f"mu_hat_EXP{EXP}_m{m}_eps{eps}_delta{delta}_seed{s}.npy"
+        np.save(save_path, arr)
+        print(f"Seed {s:02d}: wrote {save_path.name} (len={arr.size:,}), runtime={dt:.3f}s")
+
+    # save summary for this m
+    rows.append([
+        "bin_mech_algo",
+        m, EXP, eps, delta, p,
+        np.mean(times), np.std(times, ddof=1), len(times)
+    ])
+
+# --- Save CSV with all m values ---
+Path("plots").mkdir(parents=True, exist_ok=True)
+csv_path = Path("cache") / f"bin_mech_runtime_EXP{EXP}_eps{eps}_delta{delta}.csv"
+
+with open(csv_path, "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow([
+        "method", "m", "EXP", "eps", "delta", "p",
+        "mean_runtime_sec", "std_runtime_sec", "n_runs"
+    ])
+    writer.writerows(rows)
+
+print(f"\nSaved runtime summary to {csv_path}")
+
+# import matplotlib.pyplot as plt
+
+# def plot_estimation_error(mu_hats, xs, p=None, title=None, use_log_y=False):
+#     """
+#     Plot |mu_hat_t - true_mean_t| over time.
+
+#     Args:
+#         mu_hats: list of DP estimates [mu_hat_1, ..., mu_hat_T]
+#         xs:      list of observed samples [x_1, ..., x_T] (same length/order)
+#         p:       float or None. If provided, uses this as the true mean.
+#                  If None, uses empirical mean so far (sum_{i<=t} x_i / t).
+#         title:   optional plot title (str)
+#         use_log_y: bool, if True sets y-axis to log-scale
+#     """
+#     assert len(mu_hats) == len(xs), "mu_hats and xs must have same length"
+#     errors = []
+#     csum = 0.0
+#     for t, (mh, x) in enumerate(zip(mu_hats, xs), start=1):
+#         csum += x
+#         true_mean_t = p if p is not None else (csum / t)
+#         errors.append(abs(mh - true_mean_t))
+
+#     plt.figure()
+#     plt.plot(range(1, len(errors) + 1), errors)
+#     if use_log_y:
+#         plt.yscale("log")
+#     plt.xlabel("t")
+#     # plt.xscale("log")
+#     plt.ylabel("|mu_hat - true_mean|")
+#     if title:
+#         plt.title(title)
+#     plt.tight_layout()
+#     plt.show()
+
+# plot_estimation_error(estimates, range(n*m), p=p, title="Estimation error over time", use_log_y=True)

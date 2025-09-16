@@ -86,7 +86,7 @@ else:
     )
     plt.xlabel('Matrix Size')
     plt.xscale('log')
-    plt.ylabel('Ratio to the Optimal Value')
+    plt.ylabel('Ratio to the Optimal Error')
     plt.legend()
     plt.tight_layout(pad=0)
     plt.savefig("plots/efficient_error_ratio_vs_log_mat_size.pdf", format="pdf")

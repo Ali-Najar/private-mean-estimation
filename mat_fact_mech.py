@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def inv_series(c, n):
     c = np.asarray(c, dtype=float)
@@ -44,6 +45,57 @@ def build_g_from_Ckind(n, p, C_kind):
     g = inv_series(c, p)      # only need p coeffs
     return g
 
+def sens(c, n, k, b):
+    """
+    Compute sens(C, k, b) for C = T(c) lower-triangular Toeplitz (first column c).
+    Exactly equals: M = C[:, :k*b:b]; G = M.T @ M; sqrt(sum(G)) but avoids building M/G.
+
+    Parameters
+    ----------
+    c : array-like
+        First column of the Toeplitz matrix (length may be >= n or < n).
+    n : int
+        Matrix size (n x n). Only first n rows/cols considered.
+    k : int
+        Number of sampled columns (columns 0, b, 2b, ..., (k-1)b).
+    b : int
+        Column spacing.
+    """
+    c = np.asarray(c, dtype=float)
+    P = min(len(c), n)  # available diagonal entries
+
+    # Precompute prefix sums of products for lags L = 0, b, 2b, ..., (k-1)*b
+    pref = {}
+    for d in range(k):                  # d = 0..k-1
+        L = d * b
+        if L >= P:
+            pref[L] = np.array([0.0])   # no overlap for this lag
+            continue
+        prod = c[: P - L] * c[L : P]   # elementwise products length = P-L
+        p = np.empty(len(prod) + 1, dtype=float)
+        p[0] = 0.0
+        p[1:] = np.cumsum(prod)
+        pref[L] = p                     # pref[L][t] = sum_{u=0..t-1} c[u]*c[u+L]
+
+    total = 0.0
+    # Sum over sampled column indices i,j (columns at offsets i*b and j*b)
+    for i in range(k):
+        si = i * b
+        for j in range(k):
+            sj = j * b
+            L = abs(i - j) * b
+            # valid rows for overlap start at max(si,sj) and go to n-1 -> count = n - max(si,sj)
+            count = n - max(si, sj)
+            if count <= 0:
+                continue
+            M = max(0, P - L)            # available products for this lag
+            take = min(count, M)
+            if take <= 0:
+                continue
+            total += pref[L][take]
+    return float(np.sqrt(total))
+
+
 # ---- Algorithm 1 with A = running mean and banded C^{-1}
 def continual_mean_banded_Cinv(
     X, g, sigma, xi=None, Z=None, seed=None, dtype=None
@@ -74,10 +126,10 @@ def continual_mean_banded_Cinv(
 
     for t in range(n):
         x = X[t]
-        if xi is not None:
-            norm = np.linalg.norm(x)
-            if norm > xi:
-                x = (xi / norm) * x
+        # if xi is not None:
+        #     norm = np.linalg.norm(x)
+        #     if norm > xi:
+        #         x = (xi / norm) * x
 
         z_t = draw() if draw is not None else Z[t]
         idx = t % p
@@ -92,3 +144,138 @@ def continual_mean_banded_Cinv(
         mu_hat[t] = run_sum / (t + 1)
 
     return mu_hat
+
+import os
+
+EXP = 19
+n = 2 ** EXP
+k = 64
+b = n // k
+p = 16
+eps = 1
+delta = 1e-3 
+xi = 1
+mu = 0.5
+
+# Two C_kinds
+C_kinds = ["Dtoep", "A1_sqrt"]  
+import time
+import csv
+
+runtimes = {kind: [] for kind in C_kinds}  # per-method list of per-seed runtimes (seconds)
+
+def make_X_bernoulli(n, p=0.5, seed=None):
+    rng = np.random.default_rng(seed)
+    return rng.binomial(1, p, size=(n, 1)).astype(float)
+
+def sigma_eps_delta(eps, delta):
+    return np.sqrt(2.0 * np.log(1.25 / delta)) / eps
+
+os.makedirs("cache/mat_fact_algo", exist_ok=True)
+
+for C_kind in C_kinds:
+    # Create folders: cache/mat_fact_alg/C_kind/mu{mu}
+    save_dir = os.path.join("cache", "mat_fact_algo", C_kind, f"mu{mu}")
+    os.makedirs(save_dir, exist_ok=True)
+
+    # Loop over multiple seeds
+    for SEED in range(50):
+        print(f"\n=== Running {C_kind} with SEED={SEED} ===")
+
+        ss = np.random.SeedSequence(SEED)
+        s_X, s_noise = ss.spawn(2)
+
+        # create a unique filename
+        cache_name = (
+            f"mu_hat_EXP{EXP}_k{k}_b{b}_p{p}"
+            f"_eps{eps}_delta{delta}_xi{xi}_seed{SEED}.npy"
+        )
+        cache_path = os.path.join(save_dir, cache_name)
+
+        if os.path.exists(cache_path):
+            print(f"Loading cached result from {cache_path}")
+            mu_hat = np.load(cache_path)
+            # Do not record runtime for cached results
+        else:
+            print("Running computation...")
+            t0 = time.perf_counter()
+
+            g = build_g_from_Ckind(n=n, p=p, C_kind=C_kind)
+            newC = inv_series(g, n)
+
+            sensitivity = sens(newC, n, k, b)
+            sigma = sigma_eps_delta(eps, delta) * xi * sensitivity
+
+            X = make_X_bernoulli(n, mu, seed=s_X)
+            mu_hat = continual_mean_banded_Cinv(X, g, sigma, seed=s_noise)
+
+            dt = time.perf_counter() - t0
+            runtimes[C_kind].append(dt)  # seconds for this seed/run
+
+            np.save(cache_path, mu_hat)
+            print(f"Saved result to {cache_path}  (runtime: {dt:.3f}s)")
+
+# --- Write runtime summary CSV ---
+os.makedirs("plots", exist_ok=True)
+
+def fmt(v):
+    return f"{v:.6g}" if v is not None else ""
+
+summary_rows = []
+for kind, times in runtimes.items():
+    if len(times) == 0:
+        mean_t = None
+        std_t  = None
+        n_used = 0
+    else:
+        arr = np.asarray(times, dtype=float)
+        mean_t = float(arr.mean())
+        std_t  = float(arr.std(ddof=1)) if len(arr) > 1 else 0.0
+        n_used = int(arr.size)
+
+    summary_rows.append({
+        "method": kind,
+        "n_runs_used": n_used,
+        "mean_runtime_sec": fmt(mean_t) if mean_t is not None else "",
+        "std_runtime_sec": fmt(std_t) if std_t is not None else "",
+        "EXP": EXP,
+        "m": k,
+        "k": k,
+        "p": p,
+        "eps": eps,
+        "delta": delta,
+        "xi": xi,
+        "mu": mu,
+    })
+
+csv_name = (
+    f"runtime_summary_EXP{EXP}_m{k}_k{k}_p{p}_"
+    f"eps{eps}_delta{delta}_xi{xi}_mu{mu}.csv"
+)
+csv_path = os.path.join("cache", csv_name)
+
+with open(csv_path, "w", newline="") as f:
+    writer = csv.DictWriter(
+        f,
+        fieldnames=[
+            "method", "n_runs_used", "mean_runtime_sec", "std_runtime_sec",
+            "EXP", "m", "k", "p", "eps", "delta", "xi", "mu"
+        ],
+    )
+    writer.writeheader()
+    writer.writerows(summary_rows)
+
+print(f"\nSaved runtime summary to {csv_path}")
+print("Note: cached runs are excluded from timing averages.")
+
+# --- Plotting ---
+abs_err = np.abs(mu_hat - mu).ravel()
+
+plt.figure(figsize=(8, 4))
+plt.plot(abs_err)
+plt.xlabel("t")
+plt.ylabel("|mu_hat - mu|")
+plt.yscale('log')
+plt.title("Absolute error of private running mean (d=1, Bernoulli)")
+plt.tight_layout()
+plt.show()
