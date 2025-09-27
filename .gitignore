@@ -3,3 +3,467 @@ images/
 
 bin_mech_algo/
 mat_fact_algo/
+cache/bin_mech_runtime_EXP19_eps1.0_delta0.001.csv
+cache/runtime_summary_EXP19_m8_k8_p16_eps1_delta0.001_xi1_mu0.5.csv
+cache/runtime_summary_EXP19_m8_k8_p16_eps1_delta1e-06_xi1_mu0.5.csv
+cache/runtime_summary_EXP19_m8_k8_p32_eps1_delta0.001_xi1_mu0.5.csv
+cache/runtime_summary_EXP19_m8_k8_p64_eps1_delta0.001_xi1_mu0.5.csv
+cache/runtime_summary_EXP19_m32_k32_p14_eps1_delta0.001_xi1_mu0.5.csv
+cache/runtime_summary_EXP19_m32_k32_p16_eps1_delta0.001_xi1_mu0.5.csv
+cache/runtime_summary_EXP19_m64_k64_p16_eps1_delta0.001_xi1_mu0.5.csv
+cache/1024/banded/16/4/bsr_i1.pkl
+cache/1024/banded/16/4/bsr_i2.pkl
+cache/1024/banded/16/4/bsr_i3.pkl
+cache/1024/banded/256/8/bsr_i1.pkl
+cache/1024/banded/256/8/bsr_i2.pkl
+cache/1024/banded/256/8/bsr_i3.pkl
+cache/1024/banded/64/6/bsr_i1.pkl
+cache/1024/banded/64/6/bsr_i2.pkl
+cache/1024/banded/64/6/bsr_i3.pkl
+cache/1024/banded inverse/16/4/bisr_i1.pkl
+cache/1024/banded inverse/16/4/bisr_i2.pkl
+cache/1024/banded inverse/16/4/bisr_i3.pkl
+cache/1024/banded inverse/256/8/bisr_i1.pkl
+cache/1024/banded inverse/256/8/bisr_i2.pkl
+cache/1024/banded inverse/256/8/bisr_i3.pkl
+cache/1024/banded inverse/64/6/bisr_i1.pkl
+cache/1024/banded inverse/64/6/bisr_i2.pkl
+cache/1024/banded inverse/64/6/bisr_i3.pkl
+cache/1024/nonbanded/16/4/i1.pkl
+cache/1024/nonbanded/16/4/i2.pkl
+cache/1024/nonbanded/16/4/i3.pkl
+cache/1024/nonbanded/16/4/i4.pkl
+cache/1024/nonbanded/256/8/i1.pkl
+cache/1024/nonbanded/256/8/i2.pkl
+cache/1024/nonbanded/256/8/i3.pkl
+cache/1024/nonbanded/256/8/i4.pkl
+cache/1024/nonbanded/64/6/i1.pkl
+cache/1024/nonbanded/64/6/i2.pkl
+cache/1024/nonbanded/64/6/i3.pkl
+cache/1024/nonbanded/64/6/i4.pkl
+cache/128/banded/2/1/bsr_i1.pkl
+cache/128/banded/2/1/bsr_i2.pkl
+cache/128/banded/2/1/bsr_i3.pkl
+cache/128/banded/32/5/bsr_i1.pkl
+cache/128/banded/32/5/bsr_i2.pkl
+cache/128/banded/32/5/bsr_i3.pkl
+cache/128/banded/8/3/bsr_i1.pkl
+cache/128/banded/8/3/bsr_i2.pkl
+cache/128/banded/8/3/bsr_i3.pkl
+cache/128/banded inverse/2/1/bisr_i1.pkl
+cache/128/banded inverse/2/1/bisr_i2.pkl
+cache/128/banded inverse/2/1/bisr_i3.pkl
+cache/128/banded inverse/32/5/bisr_i1.pkl
+cache/128/banded inverse/32/5/bisr_i2.pkl
+cache/128/banded inverse/32/5/bisr_i3.pkl
+cache/128/banded inverse/8/3/bisr_i1.pkl
+cache/128/banded inverse/8/3/bisr_i2.pkl
+cache/128/banded inverse/8/3/bisr_i3.pkl
+cache/128/nonbanded/2/1/i1.pkl
+cache/128/nonbanded/2/1/i2.pkl
+cache/128/nonbanded/2/1/i3.pkl
+cache/128/nonbanded/2/1/i4.pkl
+cache/128/nonbanded/32/5/i1.pkl
+cache/128/nonbanded/32/5/i2.pkl
+cache/128/nonbanded/32/5/i3.pkl
+cache/128/nonbanded/32/5/i4.pkl
+cache/128/nonbanded/8/3/i1.pkl
+cache/128/nonbanded/8/3/i2.pkl
+cache/128/nonbanded/8/3/i3.pkl
+cache/128/nonbanded/8/3/i4.pkl
+cache/16/banded/4/2/bsr_i1.pkl
+cache/16/banded/4/2/bsr_i2.pkl
+cache/16/banded/4/2/bsr_i3.pkl
+cache/16/banded inverse/4/2/bisr_i1.pkl
+cache/16/banded inverse/4/2/bisr_i2.pkl
+cache/16/banded inverse/4/2/bisr_i3.pkl
+cache/16/nonbanded/4/2/i1.pkl
+cache/16/nonbanded/4/2/i2.pkl
+cache/16/nonbanded/4/2/i3.pkl
+cache/16/nonbanded/4/2/i4.pkl
+cache/16384/banded/1024/10/bsr_i1.pkl
+cache/16384/banded/1024/10/bsr_i2.pkl
+cache/16384/banded/1024/10/bsr_i3.pkl
+cache/16384/banded/256/8/bsr_i1.pkl
+cache/16384/banded/256/8/bsr_i2.pkl
+cache/16384/banded/256/8/bsr_i3.pkl
+cache/16384/banded/4096/12/bsr_i1.pkl
+cache/16384/banded/4096/12/bsr_i2.pkl
+cache/16384/banded/4096/12/bsr_i3.pkl
+cache/16384/banded inverse/1024/10/bisr_i1.pkl
+cache/16384/banded inverse/1024/10/bisr_i2.pkl
+cache/16384/banded inverse/1024/10/bisr_i3.pkl
+cache/16384/banded inverse/256/8/bisr_i1.pkl
+cache/16384/banded inverse/256/8/bisr_i2.pkl
+cache/16384/banded inverse/256/8/bisr_i3.pkl
+cache/16384/banded inverse/4096/12/bisr_i1.pkl
+cache/16384/banded inverse/4096/12/bisr_i2.pkl
+cache/16384/banded inverse/4096/12/bisr_i3.pkl
+cache/16384/nonbanded/1024/10/i1.pkl
+cache/16384/nonbanded/1024/10/i2.pkl
+cache/16384/nonbanded/1024/10/i3.pkl
+cache/16384/nonbanded/1024/10/i4.pkl
+cache/16384/nonbanded/256/8/i1.pkl
+cache/16384/nonbanded/256/8/i2.pkl
+cache/16384/nonbanded/256/8/i3.pkl
+cache/16384/nonbanded/256/8/i4.pkl
+cache/16384/nonbanded/4096/12/i1.pkl
+cache/16384/nonbanded/4096/12/i2.pkl
+cache/16384/nonbanded/4096/12/i3.pkl
+cache/16384/nonbanded/4096/12/i4.pkl
+cache/2048/banded/128/7/bsr_i1.pkl
+cache/2048/banded/128/7/bsr_i2.pkl
+cache/2048/banded/128/7/bsr_i3.pkl
+cache/2048/banded/32/5/bsr_i1.pkl
+cache/2048/banded/32/5/bsr_i2.pkl
+cache/2048/banded/32/5/bsr_i3.pkl
+cache/2048/banded/512/9/bsr_i1.pkl
+cache/2048/banded/512/9/bsr_i2.pkl
+cache/2048/banded/512/9/bsr_i3.pkl
+cache/2048/banded inverse/128/7/bisr_i1.pkl
+cache/2048/banded inverse/128/7/bisr_i2.pkl
+cache/2048/banded inverse/128/7/bisr_i3.pkl
+cache/2048/banded inverse/32/5/bisr_i1.pkl
+cache/2048/banded inverse/32/5/bisr_i2.pkl
+cache/2048/banded inverse/32/5/bisr_i3.pkl
+cache/2048/banded inverse/512/9/bisr_i1.pkl
+cache/2048/banded inverse/512/9/bisr_i2.pkl
+cache/2048/banded inverse/512/9/bisr_i3.pkl
+cache/2048/nonbanded/128/7/i1.pkl
+cache/2048/nonbanded/128/7/i2.pkl
+cache/2048/nonbanded/128/7/i3.pkl
+cache/2048/nonbanded/128/7/i4.pkl
+cache/2048/nonbanded/32/5/i1.pkl
+cache/2048/nonbanded/32/5/i2.pkl
+cache/2048/nonbanded/32/5/i3.pkl
+cache/2048/nonbanded/32/5/i4.pkl
+cache/2048/nonbanded/512/9/i1.pkl
+cache/2048/nonbanded/512/9/i2.pkl
+cache/2048/nonbanded/512/9/i3.pkl
+cache/2048/nonbanded/512/9/i4.pkl
+cache/256/banded/16/4/bsr_i1.pkl
+cache/256/banded/16/4/bsr_i2.pkl
+cache/256/banded/16/4/bsr_i3.pkl
+cache/256/banded/4/2/bsr_i1.pkl
+cache/256/banded/4/2/bsr_i2.pkl
+cache/256/banded/4/2/bsr_i3.pkl
+cache/256/banded/64/6/bsr_i1.pkl
+cache/256/banded/64/6/bsr_i2.pkl
+cache/256/banded/64/6/bsr_i3.pkl
+cache/256/banded inverse/16/4/bisr_i1.pkl
+cache/256/banded inverse/16/4/bisr_i2.pkl
+cache/256/banded inverse/16/4/bisr_i3.pkl
+cache/256/banded inverse/4/2/bisr_i1.pkl
+cache/256/banded inverse/4/2/bisr_i2.pkl
+cache/256/banded inverse/4/2/bisr_i3.pkl
+cache/256/banded inverse/64/6/bisr_i1.pkl
+cache/256/banded inverse/64/6/bisr_i2.pkl
+cache/256/banded inverse/64/6/bisr_i3.pkl
+cache/256/nonbanded/16/4/i1.pkl
+cache/256/nonbanded/16/4/i2.pkl
+cache/256/nonbanded/16/4/i3.pkl
+cache/256/nonbanded/16/4/i4.pkl
+cache/256/nonbanded/4/2/i1.pkl
+cache/256/nonbanded/4/2/i2.pkl
+cache/256/nonbanded/4/2/i3.pkl
+cache/256/nonbanded/4/2/i4.pkl
+cache/256/nonbanded/64/6/i1.pkl
+cache/256/nonbanded/64/6/i2.pkl
+cache/256/nonbanded/64/6/i3.pkl
+cache/256/nonbanded/64/6/i4.pkl
+cache/32/banded/2/1/bsr_i1.pkl
+cache/32/banded/2/1/bsr_i2.pkl
+cache/32/banded/2/1/bsr_i3.pkl
+cache/32/banded/8/3/bsr_i1.pkl
+cache/32/banded/8/3/bsr_i2.pkl
+cache/32/banded/8/3/bsr_i3.pkl
+cache/32/banded inverse/2/1/bisr_i1.pkl
+cache/32/banded inverse/2/1/bisr_i2.pkl
+cache/32/banded inverse/2/1/bisr_i3.pkl
+cache/32/banded inverse/8/3/bisr_i1.pkl
+cache/32/banded inverse/8/3/bisr_i2.pkl
+cache/32/banded inverse/8/3/bisr_i3.pkl
+cache/32/nonbanded/2/1/i1.pkl
+cache/32/nonbanded/2/1/i2.pkl
+cache/32/nonbanded/2/1/i3.pkl
+cache/32/nonbanded/2/1/i4.pkl
+cache/32/nonbanded/8/3/i1.pkl
+cache/32/nonbanded/8/3/i2.pkl
+cache/32/nonbanded/8/3/i3.pkl
+cache/32/nonbanded/8/3/i4.pkl
+cache/32768/banded/2048/11/bsr_i1.pkl
+cache/32768/banded/2048/11/bsr_i2.pkl
+cache/32768/banded/2048/11/bsr_i3.pkl
+cache/32768/banded/512/9/bsr_i1.pkl
+cache/32768/banded/512/9/bsr_i2.pkl
+cache/32768/banded/512/9/bsr_i3.pkl
+cache/32768/banded/8192/13/bsr_i1.pkl
+cache/32768/banded/8192/13/bsr_i2.pkl
+cache/32768/banded/8192/13/bsr_i3.pkl
+cache/32768/banded inverse/2048/11/bisr_i1.pkl
+cache/32768/banded inverse/2048/11/bisr_i2.pkl
+cache/32768/banded inverse/2048/11/bisr_i3.pkl
+cache/32768/banded inverse/512/9/bisr_i1.pkl
+cache/32768/banded inverse/512/9/bisr_i2.pkl
+cache/32768/banded inverse/512/9/bisr_i3.pkl
+cache/32768/banded inverse/8192/13/bisr_i1.pkl
+cache/32768/banded inverse/8192/13/bisr_i2.pkl
+cache/32768/banded inverse/8192/13/bisr_i3.pkl
+cache/32768/nonbanded/2048/11/i1.pkl
+cache/32768/nonbanded/2048/11/i2.pkl
+cache/32768/nonbanded/2048/11/i3.pkl
+cache/32768/nonbanded/2048/11/i4.pkl
+cache/32768/nonbanded/512/9/i1.pkl
+cache/32768/nonbanded/512/9/i2.pkl
+cache/32768/nonbanded/512/9/i3.pkl
+cache/32768/nonbanded/512/9/i4.pkl
+cache/32768/nonbanded/8192/13/i1.pkl
+cache/32768/nonbanded/8192/13/i2.pkl
+cache/32768/nonbanded/8192/13/i3.pkl
+cache/32768/nonbanded/8192/13/i4.pkl
+cache/4096/banded/1024/10/bsr_i1.pkl
+cache/4096/banded/1024/10/bsr_i2.pkl
+cache/4096/banded/1024/10/bsr_i3.pkl
+cache/4096/banded/256/8/bsr_i1.pkl
+cache/4096/banded/256/8/bsr_i2.pkl
+cache/4096/banded/256/8/bsr_i3.pkl
+cache/4096/banded/64/6/bsr_i1.pkl
+cache/4096/banded/64/6/bsr_i2.pkl
+cache/4096/banded/64/6/bsr_i3.pkl
+cache/4096/banded inverse/1024/10/bisr_i1.pkl
+cache/4096/banded inverse/1024/10/bisr_i2.pkl
+cache/4096/banded inverse/1024/10/bisr_i3.pkl
+cache/4096/banded inverse/256/8/bisr_i1.pkl
+cache/4096/banded inverse/256/8/bisr_i2.pkl
+cache/4096/banded inverse/256/8/bisr_i3.pkl
+cache/4096/banded inverse/64/6/bisr_i1.pkl
+cache/4096/banded inverse/64/6/bisr_i2.pkl
+cache/4096/banded inverse/64/6/bisr_i3.pkl
+cache/4096/nonbanded/1024/10/i1.pkl
+cache/4096/nonbanded/1024/10/i2.pkl
+cache/4096/nonbanded/1024/10/i3.pkl
+cache/4096/nonbanded/1024/10/i4.pkl
+cache/4096/nonbanded/256/8/i1.pkl
+cache/4096/nonbanded/256/8/i2.pkl
+cache/4096/nonbanded/256/8/i3.pkl
+cache/4096/nonbanded/256/8/i4.pkl
+cache/4096/nonbanded/64/6/i1.pkl
+cache/4096/nonbanded/64/6/i2.pkl
+cache/4096/nonbanded/64/6/i3.pkl
+cache/4096/nonbanded/64/6/i4.pkl
+cache/512/banded/128/7/bsr_i1.pkl
+cache/512/banded/128/7/bsr_i2.pkl
+cache/512/banded/128/7/bsr_i3.pkl
+cache/512/banded/32/5/bsr_i1.pkl
+cache/512/banded/32/5/bsr_i2.pkl
+cache/512/banded/32/5/bsr_i3.pkl
+cache/512/banded/8/3/bsr_i1.pkl
+cache/512/banded/8/3/bsr_i2.pkl
+cache/512/banded/8/3/bsr_i3.pkl
+cache/512/banded inverse/128/7/bisr_i1.pkl
+cache/512/banded inverse/128/7/bisr_i2.pkl
+cache/512/banded inverse/128/7/bisr_i3.pkl
+cache/512/banded inverse/32/5/bisr_i1.pkl
+cache/512/banded inverse/32/5/bisr_i2.pkl
+cache/512/banded inverse/32/5/bisr_i3.pkl
+cache/512/banded inverse/8/3/bisr_i1.pkl
+cache/512/banded inverse/8/3/bisr_i2.pkl
+cache/512/banded inverse/8/3/bisr_i3.pkl
+cache/512/nonbanded/128/7/i1.pkl
+cache/512/nonbanded/128/7/i2.pkl
+cache/512/nonbanded/128/7/i3.pkl
+cache/512/nonbanded/128/7/i4.pkl
+cache/512/nonbanded/32/5/i1.pkl
+cache/512/nonbanded/32/5/i2.pkl
+cache/512/nonbanded/32/5/i3.pkl
+cache/512/nonbanded/32/5/i4.pkl
+cache/512/nonbanded/8/3/i1.pkl
+cache/512/nonbanded/8/3/i2.pkl
+cache/512/nonbanded/8/3/i3.pkl
+cache/512/nonbanded/8/3/i4.pkl
+cache/64/banded/16/4/bsr_i1.pkl
+cache/64/banded/16/4/bsr_i2.pkl
+cache/64/banded/16/4/bsr_i3.pkl
+cache/64/banded/4/2/bsr_i1.pkl
+cache/64/banded/4/2/bsr_i2.pkl
+cache/64/banded/4/2/bsr_i3.pkl
+cache/64/banded inverse/16/4/bisr_i1.pkl
+cache/64/banded inverse/16/4/bisr_i2.pkl
+cache/64/banded inverse/16/4/bisr_i3.pkl
+cache/64/banded inverse/4/2/bisr_i1.pkl
+cache/64/banded inverse/4/2/bisr_i2.pkl
+cache/64/banded inverse/4/2/bisr_i3.pkl
+cache/64/nonbanded/16/4/i1.pkl
+cache/64/nonbanded/16/4/i2.pkl
+cache/64/nonbanded/16/4/i3.pkl
+cache/64/nonbanded/16/4/i4.pkl
+cache/64/nonbanded/4/2/i1.pkl
+cache/64/nonbanded/4/2/i2.pkl
+cache/64/nonbanded/4/2/i3.pkl
+cache/64/nonbanded/4/2/i4.pkl
+cache/65536/banded/1024/1024/bsr_i1.pkl
+cache/65536/banded/1024/1024/bsr_i2.pkl
+cache/65536/banded/1024/1024/bsr_i3.pkl
+cache/65536/banded/16384/14/bsr_i1.pkl
+cache/65536/banded/16384/14/bsr_i2.pkl
+cache/65536/banded/16384/14/bsr_i3.pkl
+cache/65536/banded/4096/12/bsr_i1.pkl
+cache/65536/banded/4096/12/bsr_i2.pkl
+cache/65536/banded/4096/12/bsr_i3.pkl
+cache/65536/banded/4096/4096/bsr_i1.pkl
+cache/65536/banded/4096/4096/bsr_i2.pkl
+cache/65536/banded/4096/4096/bsr_i3.pkl
+cache/65536/banded inverse/1024/1024/bisr_i1.pkl
+cache/65536/banded inverse/1024/1024/bisr_i2.pkl
+cache/65536/banded inverse/1024/1024/bisr_i3.pkl
+cache/65536/banded inverse/16384/14/bisr_i1.pkl
+cache/65536/banded inverse/16384/14/bisr_i2.pkl
+cache/65536/banded inverse/16384/14/bisr_i3.pkl
+cache/65536/banded inverse/4096/12/bisr_i1.pkl
+cache/65536/banded inverse/4096/12/bisr_i2.pkl
+cache/65536/banded inverse/4096/12/bisr_i3.pkl
+cache/65536/banded inverse/4096/4096/bisr_i1.pkl
+cache/65536/banded inverse/4096/4096/bisr_i2.pkl
+cache/65536/banded inverse/4096/4096/bisr_i3.pkl
+cache/65536/nonbanded/1024/10/i1.pkl
+cache/65536/nonbanded/1024/10/i2.pkl
+cache/65536/nonbanded/1024/1024/i1.pkl
+cache/65536/nonbanded/1024/1024/i2.pkl
+cache/65536/nonbanded/1024/1024/i3.pkl
+cache/65536/nonbanded/1024/1024/i4.pkl
+cache/65536/nonbanded/16384/14/i1.pkl
+cache/65536/nonbanded/16384/14/i2.pkl
+cache/65536/nonbanded/16384/14/i3.pkl
+cache/65536/nonbanded/16384/14/i4.pkl
+cache/65536/nonbanded/4096/12/i1.pkl
+cache/65536/nonbanded/4096/12/i2.pkl
+cache/65536/nonbanded/4096/12/i3.pkl
+cache/65536/nonbanded/4096/12/i4.pkl
+cache/65536/nonbanded/4096/4096/i4.pkl
+cache/8/banded/2/1/bsr_i1.pkl
+cache/8/banded/2/1/bsr_i2.pkl
+cache/8/banded/2/1/bsr_i3.pkl
+cache/8/banded inverse/2/1/bisr_i1.pkl
+cache/8/banded inverse/2/1/bisr_i2.pkl
+cache/8/banded inverse/2/1/bisr_i3.pkl
+cache/8/nonbanded/2/1/i1.pkl
+cache/8/nonbanded/2/1/i2.pkl
+cache/8/nonbanded/2/1/i3.pkl
+cache/8/nonbanded/2/1/i4.pkl
+cache/8192/banded/128/7/bsr_i1.pkl
+cache/8192/banded/128/7/bsr_i2.pkl
+cache/8192/banded/128/7/bsr_i3.pkl
+cache/8192/banded/2048/11/bsr_i1.pkl
+cache/8192/banded/2048/11/bsr_i2.pkl
+cache/8192/banded/2048/11/bsr_i3.pkl
+cache/8192/banded/512/9/bsr_i1.pkl
+cache/8192/banded/512/9/bsr_i2.pkl
+cache/8192/banded/512/9/bsr_i3.pkl
+cache/8192/banded inverse/128/7/bisr_i1.pkl
+cache/8192/banded inverse/128/7/bisr_i2.pkl
+cache/8192/banded inverse/128/7/bisr_i3.pkl
+cache/8192/banded inverse/2048/11/bisr_i1.pkl
+cache/8192/banded inverse/2048/11/bisr_i2.pkl
+cache/8192/banded inverse/2048/11/bisr_i3.pkl
+cache/8192/banded inverse/512/9/bisr_i1.pkl
+cache/8192/banded inverse/512/9/bisr_i2.pkl
+cache/8192/banded inverse/512/9/bisr_i3.pkl
+cache/8192/nonbanded/128/7/i1.pkl
+cache/8192/nonbanded/128/7/i2.pkl
+cache/8192/nonbanded/128/7/i3.pkl
+cache/8192/nonbanded/128/7/i4.pkl
+cache/8192/nonbanded/2048/11/i1.pkl
+cache/8192/nonbanded/2048/11/i2.pkl
+cache/8192/nonbanded/2048/11/i3.pkl
+cache/8192/nonbanded/2048/11/i4.pkl
+cache/8192/nonbanded/512/9/i1.pkl
+cache/8192/nonbanded/512/9/i2.pkl
+cache/8192/nonbanded/512/9/i3.pkl
+cache/8192/nonbanded/512/9/i4.pkl
+cache/g/g_A1_sqrt_n96486_p16.npy
+cache/g/g_A1_sqrt_n99438_p16.npy
+cache/g/g_A1_sqrt_n99953_p16.npy
+cache/g/g_A1_sqrt_n99991_p16.npy
+cache/g/g_A1_sqrt_n100000_p16.npy
+cache/g/g_A1_sqrt_n194116_p16.npy
+cache/g/g_A1_sqrt_n199390_p16.npy
+cache/g/g_A1_sqrt_n199955_p16.npy
+cache/g/g_A1_sqrt_n299943_p16.npy
+cache/g/g_A1_sqrt_n299992_p16.npy
+cache/g/g_A1_sqrt_n599950_p16.npy
+cache/g/g_Dtoep_n96486_p16.npy
+cache/g/g_Dtoep_n99438_p16.npy
+cache/g/g_Dtoep_n99953_p16.npy
+cache/g/g_Dtoep_n99991_p16.npy
+cache/g/g_Dtoep_n100000_p16.npy
+cache/g/g_Dtoep_n194116_p16.npy
+cache/g/g_Dtoep_n199390_p16.npy
+cache/g/g_Dtoep_n199955_p16.npy
+cache/g/g_Dtoep_n299943_p16.npy
+cache/g/g_Dtoep_n299992_p16.npy
+cache/g/g_Dtoep_n299999_p16.npy
+cache/g/g_Dtoep_n599950_p16.npy
+cache/mat_fact_algo_csv/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_CA1_sqrt.csv
+cache/mat_fact_algo_csv/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_CDtoep.csv
+plots/_multi_error_vs_mat_size_k4_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k4_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k4_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k16_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k16_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k16_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k64_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k64_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k64_ratioTrue.pdf
+plots/_multi_error_vs_mat_size8192_k4_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size8192_k4_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size8192_k16_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size8192_k16_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size8192_k64_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size8192_k64_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size32768_k4_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size32768_k4_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size32768_k16_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size32768_k16_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_mat_size32768_k64_p=b_ratioTrue.pdf
+plots/_multi_error_vs_mat_size32768_k64_p=logb_ratioTrue.pdf
+plots/_multi_error_vs_p_val_k2_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k4_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k4_n2048_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k8_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k16_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k32_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k64_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k128_n1024_ratioFalse.pdf
+plots/_multi_error_vs_p_val_k128_n2048_ratioFalse.pdf
+plots/efficient_error_ratio_vs_log_mat_size.pdf
+plots/error_vs_log_mat_size.pdf
+plots/mse_EXP19_m8_k8_p16_eps1.0_delta0.001_xi1_mu0.5_A1_sqrt.csv
+plots/mse_EXP19_m8_k8_p16_eps1.0_delta0.001_xi1_mu0.5_bin_mech_algo.csv
+plots/mse_EXP19_m8_k8_p16_eps1.0_delta0.001_xi1_mu0.5_Dtoep.csv
+plots/mse_EXP19_m32_k32_p16_eps1.0_delta0.001_xi1_mu0.5_A1_sqrt.csv
+plots/mse_EXP19_m32_k32_p16_eps1.0_delta0.001_xi1_mu0.5_bin_mech_algo.csv
+plots/mse_EXP19_m32_k32_p16_eps1.0_delta0.001_xi1_mu0.5_Dtoep.csv
+plots/mse_EXP19_m64_k64_p16_eps1.0_delta0.001_xi1_mu0.5_A1_sqrt.csv
+plots/mse_EXP19_m64_k64_p16_eps1.0_delta0.001_xi1_mu0.5_bin_mech_algo.csv
+plots/mse_EXP19_m64_k64_p16_eps1.0_delta0.001_xi1_mu0.5_Dtoep.csv
+plots/mse_summary_EXP19_m8_k8_p16_eps1.0_delta0.001_xi1_mu0.5.csv
+plots/mse_summary_EXP19_m32_k32_p16_eps1.0_delta0.001_xi1_mu0.5.csv
+plots/mse_summary_EXP19_m64_k64_p16_eps1.0_delta0.001_xi1_mu0.5.csv
+plots/plot_EXP19_m8_k8_p16_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/plot_EXP19_m8_k8_p16_eps1.0_delta1e-06_xi1_mu0.5.pdf
+plots/plot_EXP19_m8_k8_p32_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/plot_EXP19_m8_k8_p64_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/plot_EXP19_m32_k8_p16_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/plot_EXP19_m32_k32_p14_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/plot_EXP19_m32_k32_p16_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/plot_EXP19_m64_k8_p16_eps1.0_delta0.001_xi1_mu0.5.pdf
+plots/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_CA1_sqrt.pdf
+plots/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_CDtoep.pdf
+plots/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_combined.pdf
+plots/running_means_compare_b500_k389_p16_eps10.0_delta5e-06_xi1000_A1sqrt_and_Dtoep.pdf
+plots/running_means_true_b500_k389_p16_eps10.0_delta5e-06_xi1000_CA1_sqrt_and_CDtoep.pdf
+plots/_multi_error_vs_mat_size_k4_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k16_ratioTrue.pdf
+plots/_multi_error_vs_mat_size_k64_ratioTrue.pdf
+plots/efficient_error_ratio_vs_log_mat_size.pdf
+plots/error_vs_log_mat_size.pdf
