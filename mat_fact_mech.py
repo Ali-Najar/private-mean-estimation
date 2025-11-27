@@ -150,11 +150,16 @@ def build_g_from_Ckind(n, p, C_kind):
 
     if C_kind == "Dtoep":
         c = seq_Dtoep(n)
+        g = inv_series(c, p)      # only need p coeffs
     elif C_kind == "A1_sqrt":
         c = seq_A1_sqrt_rec(n)
+        g = inv_series(c, p)      # only need p coeffs
+    elif C_kind == "I":
+        g = np.zeros(p, dtype=float)
+        if p > 0:
+            g[0] = 1.0
     else:
         raise ValueError("C_kind must be {'Dtoep','A1_sqrt'}")
-    g = inv_series(c, p)      # only need p coeffs
 
     tmp = fname + ".tmp.npy"
     np.save(tmp, g)
@@ -300,7 +305,7 @@ def mat_fact():
     mu = 0.5
 
     # Two C_kinds
-    C_kinds = ["Dtoep", "A1_sqrt"]  
+    C_kinds = ["Dtoep", "A1_sqrt", "I"]  
     import time
     import csv
 
@@ -349,6 +354,22 @@ def mat_fact():
 
                 np.save(cache_path, mu_hat)
                 print(f"Saved result to {cache_path}  (runtime: {dt:.3f}s)")
+
+                # --- NEW: save cumulative sum of squared errors S_t = sum_{j<=t} (mu_j - muhat_j)^2
+                true_rm = np.cumsum(X.reshape(-1)) / np.arange(1, n + 1)   # μ_t (noiseless running mean)
+                priv_rm = mu_hat.reshape(-1)
+                T = min(len(true_rm), len(priv_rm))
+                err = true_rm[:T] - priv_rm[:T]
+                sum_sqerr = np.cumsum(err**2)
+
+                sumsq_name = (
+                    f"sum_sqerr_EXP{EXP}_k{k}_b{b}_p{p}"
+                    f"_eps{eps}_delta{delta}_xi{xi}_seed{SEED}.npy"
+                )
+                sumsq_path = os.path.join(save_dir, sumsq_name)
+                np.save(sumsq_path, sum_sqerr)
+                print(f"Saved cumulative squared-error series to {sumsq_path}")
+
 
     # --- Write runtime summary CSV ---
     os.makedirs("plots", exist_ok=True)
@@ -534,7 +555,7 @@ if use_real_data:
     df_clean["amount"] = pd.to_numeric(df_clean["amount"], errors="coerce")
     df_clean = df_clean.dropna(subset=["amount"])
 
-    for idx, ckind in enumerate(["Dtoep", "A1_sqrt"]):
+    for idx, ckind in enumerate(["Dtoep", "A1_sqrt", "I"]):
         print(f"Processing {ckind}")
         run_private_running_mean(df_clean, C_kind=ckind,seed = idx)
 

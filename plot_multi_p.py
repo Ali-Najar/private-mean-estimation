@@ -162,12 +162,12 @@ labels = [
 labels_bsr = [
     "$\mathbf{D}_{\mathrm{Toep}}^{1/2}$ (Banded)",
     "$\mathbf{D}_{\mathrm{Toep}}$ (Banded)",
-    " $\mathbf{A} \mathbf{A}_{1}^{-1/2}, \mathbf{A}_{1}^{1/2}$ (BSR)",
+    " $\mathbf{A} \mathbf{E}_{1}^{-1/2}, \mathbf{E}_{1}^{1/2}$ (BSR)",
 ]
 labels_bisr = [
     "$\mathbf{D}_{\mathrm{Toep}}^{1/2}$ (Banded Inverse)",
     "$\mathbf{D}_{\mathrm{Toep}}$ (Banded Inverse)",
-    " $\mathbf{A} \mathbf{A}_{1}^{-1/2}, \mathbf{A}_{1}^{1/2}$ (BISR)",
+    " $\mathbf{A} \mathbf{E}_{1}^{-1/2}, \mathbf{E}_{1}^{1/2}$ (BISR)",
 ]
 
 markers = [None,'o', 's', '>', 'D']

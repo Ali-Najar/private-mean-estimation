@@ -361,7 +361,27 @@ for m in m_values:
         arr = np.asarray(estimates, dtype=np.float32)
         save_path = outdir / f"mu_hat_EXP{EXP}_m{m}_eps{eps}_delta{delta}_seed{s}.npy"
         np.save(save_path, arr)
-        print(f"Seed {s:02d}: wrote {save_path.name} (len={arr.size:,}), runtime={dt:.3f}s")
+        
+        # --- NEW: save S_t = sum_{j<=t} (mu_j - muhat_j)^2 ---
+        # Compute noiseless running mean μ_t from the same processed stream order.
+        csum = 0.0
+        true_rm = np.empty(len(stream), dtype=np.float32)
+        for t_idx, (_, x) in enumerate(stream, start=1):
+            csum += x
+            true_rm[t_idx - 1] = csum / t_idx
+
+        priv_rm = arr  # estimates already in correct order and length
+        Tlen = min(len(true_rm), len(priv_rm))
+        err2 = (true_rm[:Tlen] - priv_rm[:Tlen])**2
+        sum_sqerr = np.cumsum(err2, dtype=np.float64).astype(np.float32)
+
+        sum_path = outdir / f"sum_sqerr_EXP{EXP}_m{m}_eps{eps}_delta{delta}_seed{s}.npy"
+        np.save(sum_path, sum_sqerr)
+
+        print(
+            f"Seed {s:02d}: wrote {save_path.name} & {sum_path.name} "
+            f"(len={arr.size:,}), runtime={dt:.3f}s"
+        )
 
     # save summary for this m
     rows.append([

@@ -453,7 +453,7 @@ for k in k_values:
     })
 
     labels = [
-        "$\\mathbf{A}_1^{1/2}$",
+        "$\\mathbf{E}_{1}^{1/2}$",
         "$\\mathbf{I}$",
         "(vi) $\\mathbf{A} \\mathbf{D}_{\\mathrm{Toep}}^{-1/2}, \\mathbf{D}_{\\mathrm{Toep}}^{1/2}$",
         "$\\mathbf{D}_{\\mathrm{Toep}}$",
@@ -461,12 +461,12 @@ for k in k_values:
     labels_bsr = [
         "$\\mathbf{D}_{\\mathrm{Toep}}^{1/2}$ (Banded)",
         "$\\mathbf{D}_{\\mathrm{Toep}}$ (Banded)",
-        "$\\mathbf{A}_{1}^{1/2}$ (Banded)",
+        "$\\mathbf{E}_{1}^{1/2}$ (Banded)",
     ]
     labels_bisr = [
         "$\\mathbf{D}_{\\mathrm{Toep}}^{1/2}$ (Banded Inverse)",
         "$\\mathbf{D}_{\\mathrm{Toep}}$ (Banded Inverse)",
-        "$\\mathbf{A}_{1}^{1/2}$ (Banded Inverse)",
+        "$\\mathbf{E}_{1}^{1/2}$ (Banded Inverse)",
     ]
 
     markers      = [None, 'o', 's', '>', 'D']         # 1..4

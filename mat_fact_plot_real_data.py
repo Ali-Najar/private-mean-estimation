@@ -3,22 +3,28 @@ import math
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, FixedLocator
 
 def set_xlabels_as_times_1e4(ax, n, step=5):
-    """
-    Put major ticks at 5e4, 10e4, 15e4, ... up to n,
-    but label them 5, 10, 15, ...
-    """
     kmax = int(np.ceil(n / 1e4))
     if kmax <= step:
-        return  # nothing to do
+        ax.set_xlabel("Timesteps")
+        return
+
     labels = list(range(step, kmax + 1, step))
     ticks  = (1e4 * np.array(labels)).astype(int)
-    ax.set_xticks(ticks)
-    ax.set_xticklabels([str(v) for v in labels])
-    ax.set_xlabel(r"Timesteps $\times 10^{4}$")
 
+    ax.xaxis.set_major_locator(FixedLocator(ticks))
+
+    def _fmt(x, pos):
+        k = x / 1e4
+        if np.isclose(k, round(k)) and (round(k) in labels):
+            return fr"${int(round(k))}\times 10^{{4}}$"
+        return ""  
+
+    ax.xaxis.set_major_formatter(FuncFormatter(_fmt))
+
+    ax.set_xlabel("Timesteps")
 
 
 def log_thin_indices(n: int, dense_first: int = 2000, per_decade: int = 200):
@@ -111,7 +117,7 @@ def plot_three_running_means(
     #     plt.xscale("log", base=10)
 
     plt.plot(x, y_true, linestyle="--", linewidth=1.2, label="Running mean")
-    plt.plot(x, y_a1,   linewidth=1.2, label="$\\mathbf{A}_1^{1/2}$")
+    plt.plot(x, y_a1,   linewidth=1.2, label="$\\mathbf{E}_1^{1/2}$")
     plt.plot(x, y_dt,   linewidth=1.2, label="$\\mathbf{D}_{\\mathrm{Toep}}$")
 
     ax = plt.gca()
