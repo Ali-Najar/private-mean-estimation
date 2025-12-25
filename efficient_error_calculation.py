@@ -1,40 +1,86 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-import jax_privacy
-from jax_privacy.matrix_factorization import toeplitz
-import jax.numpy as jnp
+# import jax_privacy
+# from jax_privacy.matrix_factorization import toeplitz
+# import jax.numpy as jnp
 import numpy as np
 import functools
 import matplotlib.pyplot as plt
 import scipy
 
-def expected_mean_error_BandMF(coef, n: int) -> float:
-  coef = jnp.pad(coef, (0, n - coef.size))
-  inv_coef = toeplitz.inverse_coef(coef)
-  inv_coef_cum_sum_squared = jnp.cumsum(inv_coef) ** 2
-  weights = jnp.cumsum((1 / jnp.arange(1, n + 1) ** 2)[::-1])[::-1]
+import numpy as np
+from multiprocessing import Pool
+ 
+def compute_sensitivity(c, b, k):
+    c_sum = np.zeros_like(c)
+    for i in range(k):
+        c_sum[b * i:] += c[:(len(c) - b * i)]
+    sens = np.sqrt((c_sum ** 2).sum())
+    return sens
+ 
+def compute_square_root(x, n):
+    y = np.zeros(n)
+    y[0] = np.sqrt(x[0])
+    for k in range(1, n):
+        y[k] = (x[k] -np.dot(y[1:k], y[1:k][::-1])) / (2 * y[0])
+    return y
+ 
+def Toeplitz_inverse(r):
+  n = len(r)
+  y = np.zeros(n)
+  y[0] = 1 / r[0]
+  for i in range(1, n):
+    y[i] = -(y[:i] * r[i:0:-1]).sum() / r[0]
+  return y
+ 
+def Toeplitz_product(s1, s2):
+  return np.convolve(s1, s2)[:len(s1)]
+ 
+def _compute_error_fixed_nu_FTRL(args):
+  nu, b, k, n = args
+  c = compute_square_root(np.ones(n), n) * nu ** np.arange(n)
+  sens = compute_sensitivity(c, b, k)
+  c_inv = Toeplitz_inverse(c)
+  b_arr = Toeplitz_product(np.ones(n), c_inv)
+  w = np.cumsum((1 / np.arange(1, n + 1) ** 2)[::-1])[::-1]
+  return np.sqrt((b_arr ** 2 * w).sum() / n) * sens
+ 
+ 
+def compute_error_nu_FTRL(n, k, b):
+  nus = np.linspace(0, 1, 25)
+  res = []
+  with Pool(processes=8) as p:
+      res = p.map(_compute_error_fixed_nu_FTRL, [(nu, b, k, n) for nu in nus])
+  return min(res)
+ 
 
-  B_norm_squared = (inv_coef_cum_sum_squared * weights).sum()
+# def expected_mean_error_BandMF(coef, n: int) -> float:
+#   coef = jnp.pad(coef, (0, n - coef.size))
+#   inv_coef = toeplitz.inverse_coef(coef)
+#   inv_coef_cum_sum_squared = jnp.cumsum(inv_coef) ** 2
+#   weights = jnp.cumsum((1 / jnp.arange(1, n + 1) ** 2)[::-1])[::-1]
+
+#   B_norm_squared = (inv_coef_cum_sum_squared * weights).sum()
   
-  sensitivity_squared = (coef ** 2).sum()
+#   sensitivity_squared = (coef ** 2).sum()
 
-  return sensitivity_squared * B_norm_squared
+#   return sensitivity_squared * B_norm_squared
 
-def init_BandMF(n, p):
-  return 1/ (jnp.arange(p) + 1)
+# def init_BandMF(n, p):
+#   return 1/ (jnp.arange(p) + 1)
   
-def Band_matrix_factorization(n, p, steps=10):
-    C_init = init_BandMF(n, p)
-    C_opt = toeplitz.optimize_banded_toeplitz(
-      n=n,
-      bands=p,
-      strategy_coef=C_init,
-      loss_fn=functools.partial(expected_mean_error_BandMF),
-      max_optimizer_steps=steps,
-    )
+# def Band_matrix_factorization(n, p, steps=10):
+#     C_init = init_BandMF(n, p)
+#     C_opt = toeplitz.optimize_banded_toeplitz(
+#       n=n,
+#       bands=p,
+#       strategy_coef=C_init,
+#       loss_fn=functools.partial(expected_mean_error_BandMF),
+#       max_optimizer_steps=steps,
+#     )
 
-    return expected_mean_error_BandMF(C_opt, n=n)**0.5 / np.sqrt(n)
+#     return expected_mean_error_BandMF(C_opt, n=n)**0.5 / np.sqrt(n)
 
 
 def compute_mat_sqrt(N, Toep=True):
@@ -90,10 +136,12 @@ bandW = 128
 steps = 50
 
 CACHE_FILE = 'cache/efficient_error_data.npz'
+CACHE_FILE_NUFTRL = 'cache/efficient_error_data_nuftrl.npz'
 BANDED_CACHE_FILE = f'cache/efficient_banded_cache.npz'
 import os
 
 prev_len = 0
+prev_len_nuftrl = 0
 prev_len_banded = 0
 
 errors_for_A_BandMF = []
@@ -106,6 +154,8 @@ errors_for_A_D_inv = []
 # A I / I
 errors_for_A_I = []
 
+errors_for_nuftrl = []
+
 if os.path.exists(CACHE_FILE):
     # load whatever was computed before
     data = np.load(CACHE_FILE)
@@ -114,6 +164,12 @@ if os.path.exists(CACHE_FILE):
     errors_for_A_D_sqrt_inv = list(data['errors_for_A_D_sqrt_inv'])
     errors_for_A_D_inv      = list(data['errors_for_A_D_inv'])
     prev_len = len(errors_for_A_I)
+
+if os.path.exists(CACHE_FILE_NUFTRL):
+    # load whatever was computed before
+    data = np.load(CACHE_FILE_NUFTRL)
+    errors_for_nuftrl    = list(data['errors_for_nuftrl'])
+    prev_len_nuftrl = len(errors_for_nuftrl)
 
 if os.path.exists(BANDED_CACHE_FILE):
     # load whatever was computed before
@@ -161,6 +217,8 @@ if prev_len - 1 < EXPS:
         D_toep_inv_sqr = D_toep_inv**2
         F_norm_A_D_inv = np.dot(cumsum_D_toep_inv_sqr, inv_squares_cumsum)
         errors_for_A_D_inv.append(1/np.sqrt(N) * np.sqrt(F_norm_A_D_inv) * np.sqrt(column_norm))
+
+
     
     # Save the results
     np.savez_compressed(
@@ -171,29 +229,45 @@ if prev_len - 1 < EXPS:
             errors_for_A_D_inv        = np.array(errors_for_A_D_inv),
         )
 
-if prev_len_banded - 1 < EXPS:
+if prev_len_nuftrl - 1 < EXPS:
 
-    clipped_range_banded = n_range[prev_len_banded:]
+    clipped_range_banded = n_range[prev_len_nuftrl:]
 
     for N in clipped_range_banded:
-        if N < 10:
-            steps = 50
-            bandW = 512
-        elif N < 14:
-            steps = 20
-            bandW = 256
-        else:
-            steps = 10
-            bandW = 64
-        print(f"Processing N={N} for banded matrix factorization...")
-        error_BandMF = Band_matrix_factorization(N, min(N, bandW), steps=steps)
-        errors_for_A_BandMF.append(error_BandMF)
-        print(error_BandMF)
-    # Save the results
+
+        error_nuftrl = compute_error_nu_FTRL(N, k=1, b=N)
+        errors_for_nuftrl.append(error_nuftrl)
+
+    
     np.savez_compressed(
-            BANDED_CACHE_FILE,
-            errors_for_A_BandMF = np.array(errors_for_A_BandMF),
-        )
+        CACHE_FILE_NUFTRL,
+        errors_for_nuftrl = np.array(errors_for_nuftrl)
+    )
+
+
+# if prev_len_banded - 1 < EXPS:
+
+#     clipped_range_banded = n_range[prev_len_banded:]
+
+#     for N in clipped_range_banded:
+#         if N < 10:
+#             steps = 50
+#             bandW = 512
+#         elif N < 14:
+#             steps = 20
+#             bandW = 256
+#         else:
+#             steps = 10
+#             bandW = 64
+#         print(f"Processing N={N} for banded matrix factorization...")
+#         error_BandMF = Band_matrix_factorization(N, min(N, bandW), steps=steps)
+#         errors_for_A_BandMF.append(error_BandMF)
+#         print(error_BandMF)
+#     # Save the results
+#     np.savez_compressed(
+#             BANDED_CACHE_FILE,
+#             errors_for_A_BandMF = np.array(errors_for_A_BandMF),
+#         )
 
 
 # plot_ratio = True

@@ -58,7 +58,7 @@ plt.rcParams.update({
 K = 15
 
 if plot_ratio == False:
-    plt.plot(n_range[:K], errors_for_D_A1_sqrt[:K], marker='^', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
+    plt.plot(n_range[:K], errors_for_D_A1_sqrt[:K], marker='^', label='(i) $\mathbf{D} \mathbf{E}_1^{1/2}, \mathbf{E}_1^{1/2}$')
     plt.plot(n_range[:K], errors_for_A_I[:K], marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
     plt.plot(n_range[:K], errors_for_A_D_sqrt_inv[:K], marker='s', label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
     plt.plot(n_range[:K], errors_for_A_D_inv[:K], marker='D', label='RMSE of (viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
@@ -75,7 +75,7 @@ else:
     ratios_AI = [errors_for_A_I[i] / errors_for_A_BandMF[i] for i in range(K)]
     ratios_D_toep = [errors_for_A_D_inv[i] / errors_for_A_BandMF[i] for i in range(K)]
     ratios_D_toep_sqrt = [errors_for_A_D_sqrt_inv[i] / errors_for_A_BandMF[i] for i in range(K)]
-    plt.plot(n_range[:K],ratios_D_A1_sqrt[:K], color='tab:blue', marker='o', label='(i) $\mathbf{D} \mathbf{A}_1^{1/2}, \mathbf{A}_1^{1/2}$')
+    plt.plot(n_range[:K],ratios_D_A1_sqrt[:K], color='tab:blue', marker='o', label='(i) $\mathbf{D} \mathbf{E}_1^{1/2}, \mathbf{E}_1^{1/2}$')
     plt.plot(n_range[:K],ratios_AI[:K], color='tab:orange', marker='s', label='(ii) $\mathbf{A}, \mathbf{I}$')
     plt.plot(n_range[:K],ratios_D_toep_sqrt[:K], color='tab:green', marker='>' , label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
     plt.plot(n_range[:K],ratios_D_toep[:K], color='tab:red', marker='D', label='(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
