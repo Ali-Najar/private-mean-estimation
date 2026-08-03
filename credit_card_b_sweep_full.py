@@ -575,138 +575,458 @@ def load_bandmf_cached_g(cache_file, p=None):
         return g.copy()
     return g[:min(p, len(g))].copy()
 
-def run_private_running_mean(
-    df_raw,
-    b=500,
-    C_kind="Dtoep",
-    p=16,
-    eps=10.0,
-    delta=5e-6,
-    xi=1000,
-    clip_lower=0.0,
-    clip_upper=1000.0,
-    seed=1234,
-    save_csv=True,
-    out_dir="cache/mat_fact_algo_csv",
-    prefix="running_means",
-):
-    # 1) prep + clip
-    events = prepare_events(df_raw, clip_lower, clip_upper)
 
-    events_unclipped = prepare_events(df_raw, - 1e-20, 1e20)
-    released_unclipped = enforce_b_min_separation(events, b=b)
+import math
+import os
+import time
+from collections import defaultdict, deque
+from pathlib import Path
+from typing import Iterable, Sequence
 
-    # 2) enforce b-min-separation
-    released = enforce_b_min_separation(events, b=b)
-
-    n = len(released)
-
-    print("N: ", n)
-
-    # 3) stream matrix for d=1
-    X = to_stream_matrix(released, d=1)
-    
-    # 4) build C^{-1} band (g) and sensitivity for this n and b
-    k = math.ceil(n / b)
-
-    p = effective_p(C_kind, b, p)
-
-    g = build_g_from_Ckind(n=n, p=p, C_kind=C_kind, k=k, b=b, bandmf_cache_file=BANDMF_G_CACHE_FILE if C_kind == "BandMF" else None,)
-    newC = inv_series(g, n)  # first column of C (length n)
-
-    # k is the max per-user participations bound over length n: ceil(n / b)
-
-    sensitivity = sens(newC, n, k, b)
-    sigma = sigma_eps_delta(eps, delta) * xi * sensitivity
-
-    mu_hat = continual_mean_banded_Cinv(X, g, sigma, xi=xi, seed=seed)
-
-    csv_path = None
-    if save_csv:
-        # true (noiseless) running mean over the released, clipped stream
-        true_rm = np.cumsum(released_unclipped["amount"].to_numpy(float)) / np.arange(1, n + 1)
-        priv_rm = mu_hat.reshape(-1)
-
-        if len(true_rm) != len(priv_rm):
-            raise ValueError("Lengths mismatch between true and private running means.")
-
-        df_out = pd.DataFrame({
-            "true_running_mean": true_rm,
-            "private_running_mean": priv_rm
-        })
-
-        os.makedirs(out_dir, exist_ok=True)
-        parts = [prefix, f"b{b}", f"k{k}", f"p{p}", f"eps{eps}", f"delta{delta}", f"xi{xi}", f"C{C_kind}"]
-        fname = "_".join(parts) + ".csv"
-        csv_path = os.path.join(out_dir, fname)
-        df_out.to_csv(csv_path, index=False)
-
-    diagnostics = {
-        "n_input": int(len(df_raw)),
-        "n_released": int(n),
-        "num_users": int(events["user_id"].nunique()),
-        "b": int(b),
-        "k": int(k),
-        "C_kind": C_kind,
-        "p": int(p),
-        "eps": float(eps),
-        "delta": float(delta),
-        "xi": float(xi),
-        "sigma": float(sigma),
-        "sensitivity": float(sensitivity),
-    }
-    return released, mu_hat, diagnostics
-
-import kagglehub
+import numpy as np
 import pandas as pd
-import glob, os
 
-use_real_data = True
 
-if use_real_data:
-    # path = kagglehub.dataset_download("priyamchoksi/credit-card-transactions-dataset")
-    # print("Path to dataset files:", path)
+# ---------------------------------------------------------------------------
+# Real-data-only preparation helpers.
+# They preserve both the unclipped amount (for the real running mean) and the
+# clipped amount (for the private mechanism), while enforcing b-separation once.
+# ---------------------------------------------------------------------------
 
-    # files = glob.glob(os.path.join(path, "*.csv"))
-    # if not files:
-    #     raise FileNotFoundError(f"No CSV files found in: {path}")
+def prepare_credit_card_events(
+    df_raw: pd.DataFrame,
+    clip_lower: float = 0.0,
+    clip_upper: float = 1000.0,
+) -> pd.DataFrame:
+    required = {"user_id", "event_time", "amount"}
+    missing = required.difference(df_raw.columns)
+    if missing:
+        raise ValueError(f"Missing required columns: {sorted(missing)}")
 
-    # dfs = []
-    # for f in files:
-    #     df_part = pd.read_csv(
-    #         f,
-    #         usecols=["cc_num", "trans_date_trans_time", "amt"],
-    #         dtype={"cc_num": "string"},
-    #         parse_dates=["trans_date_trans_time"],
-    #         infer_datetime_format=True
-    #     )
-    #     dfs.append(df_part)
+    df = df_raw.loc[:, ["user_id", "event_time", "amount"]].copy()
+    df["event_time"] = pd.to_datetime(df["event_time"], errors="coerce")
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+    df = df.dropna(subset=["user_id", "event_time", "amount"]).copy()
 
-    # df = pd.concat(dfs, ignore_index=True)
+    # Stable tie-breaking makes the released stream reproducible even when
+    # several transactions have the same timestamp.
+    df["source_row"] = np.arange(len(df), dtype=np.int64)
+    df = df.sort_values(
+        ["event_time", "source_row"], kind="mergesort"
+    ).reset_index(drop=True)
+
+    unique_users = df["user_id"].drop_duplicates().tolist()
+    id_map = {user_id: i for i, user_id in enumerate(unique_users)}
+    df["user_id"] = df["user_id"].map(id_map).astype(np.int64)
+
+    df["amount_true"] = df["amount"].astype(float)
+    df["amount_private"] = df["amount_true"].clip(clip_lower, clip_upper)
+
+    return df[
+        [
+            "user_id",
+            "event_time",
+            "source_row",
+            "amount_true",
+            "amount_private",
+        ]
+    ]
+
+
+def enforce_b_min_separation_real(
+    events: pd.DataFrame,
+    b: int,
+    max_releases: int,
+) -> pd.DataFrame:
+    """Release at most ``max_releases`` real events with b-separation.
+
+    This function emits only genuine dataset events. If the scheduler reaches a
+    point where no buffered user is eligible, it stops; the caller may extend
+    the *published output stream* by carrying forward its last released value.
+    Carry-forward rows are post-processing and are not new user contributions.
+    """
+    if b <= 0:
+        raise ValueError("b must be a positive integer")
+    if max_releases <= 0:
+        raise ValueError("max_releases must be a positive integer")
+
+    required = {
+        "user_id",
+        "event_time",
+        "source_row",
+        "amount_true",
+        "amount_private",
+    }
+    missing = required.difference(events.columns)
+    if missing:
+        raise ValueError(f"Missing required columns: {sorted(missing)}")
+
+    events = events.sort_values(
+        ["event_time", "source_row"], kind="mergesort"
+    ).reset_index(drop=True)
+
+    buffers: dict[int, deque] = defaultdict(deque)
+    last_idx: dict[int, int] = defaultdict(lambda: -10**18)
+    released_rows: list[dict] = []
+    curr_idx = 0
+
+    def append_real(row: dict) -> None:
+        nonlocal curr_idx
+        released_rows.append(dict(row))
+        last_idx[int(row["user_id"])] = curr_idx
+        curr_idx += 1
+
+    def flush_eligible() -> None:
+        nonlocal curr_idx
+        while curr_idx < max_releases:
+            best_user = None
+            best_key = None
+
+            for user_id, queue in buffers.items():
+                if not queue:
+                    continue
+                if curr_idx - last_idx[user_id] < b:
+                    continue
+
+                head = queue[0]
+                key = (head["event_time"], head["source_row"])
+                if best_key is None or key < best_key:
+                    best_key = key
+                    best_user = user_id
+
+            if best_user is None:
+                break
+
+            append_real(buffers[best_user].popleft())
+
+    for row in events.itertuples(index=False):
+        if curr_idx >= max_releases:
+            break
+
+        row_dict = row._asdict()
+        user_id = int(row_dict["user_id"])
+
+        if curr_idx - last_idx[user_id] >= b:
+            append_real(row_dict)
+            flush_eligible()
+        else:
+            buffers[user_id].append(row_dict)
+
+    if curr_idx < max_releases:
+        flush_eligible()
+
+    released = pd.DataFrame(released_rows)
+    if released.empty:
+        raise ValueError(f"No events were released for b={b}")
+
+    return released.reset_index(drop=True)
+
+
+def prepare_stream_for_b(
+    df_raw: pd.DataFrame,
+    b: int,
+    n: int,
+    clip_lower: float,
+    clip_upper: float,
+) -> tuple[pd.DataFrame, np.ndarray, np.ndarray]:
+    """Prepare genuine released events, capped at the fixed horizon ``n``."""
+    if n <= 0:
+        raise ValueError("n must be a positive integer")
+
+    events = prepare_credit_card_events(
+        df_raw,
+        clip_lower=clip_lower,
+        clip_upper=clip_upper,
+    )
+    released = enforce_b_min_separation_real(
+        events,
+        b=b,
+        max_releases=n,
+    )
+
+    x_private = released["amount_private"].to_numpy(dtype=float).reshape(-1, 1)
+    true_values = released["amount_true"].to_numpy(dtype=float)
+    true_running_mean = np.cumsum(true_values) / np.arange(
+        1, len(true_values) + 1, dtype=float
+    )
+
+    return released, x_private, true_running_mean
+
+
+# ---------------------------------------------------------------------------
+# Grid runner: multiple b values x multiple seeds x selected factorizations.
+# ---------------------------------------------------------------------------
+
+def _bandmf_cache_file_for_kind(c_kind: str):
+    if c_kind != "BandMF":
+        return None
+    try:
+        return BANDMF_G_CACHE_FILE
+    except NameError as exc:
+        raise NameError(
+            "C_kind='BandMF' requires BANDMF_G_CACHE_FILE to be defined "
+            "in the original code."
+        ) from exc
+
+
+def run_real_dataset_grid(
+    df_clean: pd.DataFrame,
+    b_values: Sequence[int],
+    n: int,
+    num_seeds: int,
+    *,
+    seed_start: int = 1,
+    c_kinds: Sequence[str] = ("Dtoep", "A1_sqrt"),
+    p: int = 16,
+    eps: float = 10.0,
+    delta: float = 5e-6,
+    xi: float = 1000.0,
+    clip_lower: float = 0.0,
+    clip_upper: float = 1000.0,
+    out_dir: str | os.PathLike = "cache/credit_card_b_sweep",
+    prefix: str = "running_means",
+    overwrite: bool = False,
+) -> pd.DataFrame:
+    """Generate fixed-length result CSVs for every experiment combination.
+
+    ``n`` is the common published horizon for every b value. The mechanism is
+    calibrated using this same n. If fewer than n genuine events can be
+    released under b-separation, the private and non-private running-mean
+    outputs are extended to n by repeating their final released values. This
+    extension is post-processing; it does not duplicate a user's transaction.
+    """
+    if n <= 0:
+        raise ValueError("n must be a positive integer")
+    if num_seeds <= 0:
+        raise ValueError("num_seeds must be positive")
+
+    b_values = [int(b) for b in b_values]
+    if not b_values or any(b <= 0 for b in b_values):
+        raise ValueError("b_values must contain positive integers")
+
+    seeds = list(range(int(seed_start), int(seed_start) + int(num_seeds)))
+    out_path = Path(out_dir)
+    out_path.mkdir(parents=True, exist_ok=True)
+
+    manifest_rows: list[dict] = []
+
+    for b in b_values:
+        print(f"\n===== Preparing released credit-card stream for b={b}, n={n} =====")
+        released, x_private, true_running_mean_real = prepare_stream_for_b(
+            df_clean,
+            b=b,
+            n=n,
+            clip_lower=clip_lower,
+            clip_upper=clip_upper,
+        )
+
+        n_real = len(released)
+        n_carry_forward = n - n_real
+        k = math.ceil(n / b)
+        print(
+            f"b={b}: fixed_n={n}, real_releases={n_real}, "
+            f"carry_forward={n_carry_forward}, k=ceil(n/b)={k}"
+        )
+
+        for c_kind in c_kinds:
+            p_run = effective_p(c_kind, b, p)
+            print(
+                f"\n--- Precomputing mechanism for b={b}, "
+                f"C_kind={c_kind}, p={p_run}, n={n} ---"
+            )
+
+            # Calibration uses the same fixed horizon n for every b.
+            g = build_g_from_Ckind(
+                n=n,
+                p=p_run,
+                C_kind=c_kind,
+                k=k,
+                b=b,
+                bandmf_cache_file=_bandmf_cache_file_for_kind(c_kind),
+            )
+            c_first_col = inv_series(g, n)
+            sensitivity = sens(c_first_col, n, k, b)
+            sigma = sigma_eps_delta(eps, delta) * xi * sensitivity
+
+            for seed in seeds:
+                filename = (
+                    f"{prefix}_b{b}_seed{seed}_C{c_kind}_n{n}_k{k}_p{p_run}_"
+                    f"eps{eps:g}_delta{delta:g}_clipL{clip_lower:g}_"
+                    f"clipU{clip_upper:g}_xi{xi:g}.csv"
+                )
+                csv_path = out_path / filename
+
+                status = "created"
+                runtime_sec = np.nan
+
+                if csv_path.exists() and not overwrite:
+                    print(f"Skipping existing file: {csv_path}")
+                    status = "existing"
+                else:
+                    print(
+                        f"Running b={b}, C_kind={c_kind}, seed={seed} "
+                        f"(fixed n={n}, real releases={n_real})"
+                    )
+                    start = time.perf_counter()
+                    mu_hat_real = continual_mean_banded_Cinv(
+                        x_private,
+                        g,
+                        sigma,
+                        xi=xi,
+                        seed=seed,
+                    ).reshape(-1)
+                    runtime_sec = time.perf_counter() - start
+
+                    if len(mu_hat_real) != n_real:
+                        raise RuntimeError(
+                            f"Expected {n_real} private means, got {len(mu_hat_real)}"
+                        )
+
+                    # Carry forward the last published running means. This is
+                    # post-processing and therefore uses no extra user event and
+                    # no additional noise draw.
+                    if n_carry_forward > 0:
+                        true_running_mean = np.pad(
+                            true_running_mean_real,
+                            (0, n_carry_forward),
+                            mode="edge",
+                        )
+                        mu_hat = np.pad(
+                            mu_hat_real,
+                            (0, n_carry_forward),
+                            mode="edge",
+                        )
+                    else:
+                        true_running_mean = true_running_mean_real
+                        mu_hat = mu_hat_real
+
+                    if len(mu_hat) != n or len(true_running_mean) != n:
+                        raise RuntimeError("Fixed-length output construction failed")
+
+                    error = true_running_mean - mu_hat
+                    squared_error = error**2
+                    cumulative_squared_error = np.cumsum(squared_error)
+                    rmse_through_t = np.sqrt(
+                        cumulative_squared_error
+                        / np.arange(1, n + 1, dtype=float)
+                    )
+                    is_carry_forward = np.arange(n, dtype=np.int64) >= n_real
+
+                    result = pd.DataFrame(
+                        {
+                            "t": np.arange(1, n + 1, dtype=np.int64),
+                            "is_carry_forward": is_carry_forward,
+                            "true_running_mean": true_running_mean,
+                            "private_running_mean": mu_hat,
+                            "squared_error": squared_error,
+                            "cumulative_squared_error": cumulative_squared_error,
+                            "rmse_through_t": rmse_through_t,
+                        }
+                    )
+                    result.to_csv(csv_path, index=False)
+                    print(
+                        f"Saved {csv_path} "
+                        f"(runtime {runtime_sec:.3f} seconds)"
+                    )
+
+                manifest_rows.append(
+                    {
+                        "csv_path": str(csv_path.resolve()),
+                        "status": status,
+                        "b": b,
+                        "seed": seed,
+                        "C_kind": c_kind,
+                        "n": n,
+                        "n_released": n,
+                        "n_real_released": n_real,
+                        "n_carry_forward": n_carry_forward,
+                        "k": k,
+                        "p": p_run,
+                        "eps": eps,
+                        "delta": delta,
+                        "xi": xi,
+                        "clip_lower": clip_lower,
+                        "clip_upper": clip_upper,
+                        "sensitivity": sensitivity,
+                        "sigma": sigma,
+                        "runtime_sec": runtime_sec,
+                    }
+                )
+
+    manifest = pd.DataFrame(manifest_rows)
+    manifest_path = out_path / "run_manifest.csv"
+    manifest.to_csv(manifest_path, index=False)
+    print(f"\nSaved run manifest to {manifest_path}")
+    return manifest
+
+
+# ---------------------------------------------------------------------------
+# Credit-card dataset loading and experiment configuration.
+# ---------------------------------------------------------------------------
+
+def load_credit_card_dataset(
+    csv_path: str | os.PathLike = "credit_card_transactions.csv",
+    max_rows: int | None = 200_000,
+) -> pd.DataFrame:
     df = pd.read_csv(
-        "credit_card_transactions.csv",
+        csv_path,
         usecols=["cc_num", "trans_date_trans_time", "amt"],
         dtype={"cc_num": "string"},
         parse_dates=["trans_date_trans_time"],
+        nrows=max_rows,
     )
 
-    df = df[:200000]
-
-    df_clean = df.rename(columns={
-        "cc_num": "user_id",
-        "trans_date_trans_time": "event_time",
-        "amt": "amount",
-    })
-
-    df_clean = df_clean.dropna(subset=["user_id", "event_time", "amount"]).copy()
-    df_clean["amount"] = pd.to_numeric(df_clean["amount"], errors="coerce")
-    df_clean = df_clean.dropna(subset=["amount"])
-
-    # for idx, ckind in enumerate(["Dtoep", "A1_sqrt", "I", "nu-FTRL", "BandMF"]):
-    for idx, ckind in enumerate(["BandMF"]):
-        print(f"Processing {ckind}")
-        run_private_running_mean(df_clean, C_kind=ckind,seed = idx)
+    df = df.rename(
+        columns={
+            "cc_num": "user_id",
+            "trans_date_trans_time": "event_time",
+            "amt": "amount",
+        }
+    )
+    df["amount"] = pd.to_numeric(df["amount"], errors="coerce")
+    return df.dropna(subset=["user_id", "event_time", "amount"]).copy()
 
 
-else:
-    mat_fact()
+if __name__ == "__main__":
+    # Edit only these experiment settings.
+    CREDIT_CARD_CSV = "credit_card_transactions.csv"
+    MAX_ROWS = 200_000
+    N = 200_000  # common published horizon for every b value
+
+    # B_VALUES = [25, 50, 100, 200, 300, 400, 500]
+    B_VALUES = [750, 850, 900, 950]  # for the final figure in the paper
+    NUM_SEEDS = 10                 # uses seeds 1, 2, ..., 10
+    SEED_START = 1
+
+    # Figure 4 compares these two mechanisms.
+    C_KINDS = ["Dtoep", "A1_sqrt"]
+
+    P = 16
+    EPS = 10.0
+    DELTA = 5e-6
+    XI = 200.0
+    CLIP_LOWER = 0.0
+    CLIP_UPPER = 200.0
+    OUTPUT_DIR = "cache/credit_card_b_sweep"
+
+    df_credit_card = load_credit_card_dataset(
+        CREDIT_CARD_CSV,
+        max_rows=MAX_ROWS,
+    )
+
+    run_real_dataset_grid(
+        df_credit_card,
+        b_values=B_VALUES,
+        n=N,
+        num_seeds=NUM_SEEDS,
+        seed_start=SEED_START,
+        c_kinds=C_KINDS,
+        p=P,
+        eps=EPS,
+        delta=DELTA,
+        xi=XI,
+        clip_lower=CLIP_LOWER,
+        clip_upper=CLIP_UPPER,
+        out_dir=OUTPUT_DIR,
+        overwrite=False,
+    )

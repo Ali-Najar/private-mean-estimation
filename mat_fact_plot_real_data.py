@@ -51,6 +51,7 @@ def log_thin_indices(n: int, dense_first: int = 2000, per_decade: int = 200):
 def plot_three_running_means(
     csv_a1_sqrt: str,
     csv_dtoep: str,
+    csv_bandmf: str = None,
     output_pdf: str = "plots/running_means_combined.pdf",
     dense_first: int = 2000,
     per_decade: int = 200,
@@ -77,15 +78,28 @@ def plot_three_running_means(
     if not required.issubset(df_dt.columns):
         raise ValueError(f"Dtoep CSV must contain {required}. Found: {list(df_dt.columns)}")
 
+    df_bm = None
+    if csv_bandmf is not None:
+        df_bm = pd.read_csv(csv_bandmf)
+        if not required.issubset(df_bm.columns):
+            raise ValueError(f"BandMF CSV must contain {required}. Found: {list(df_bm.columns)}")
+
     true_rm = df_a1["true_running_mean"].to_numpy()
     a1_rm   = df_a1["private_running_mean"].to_numpy()
     dt_rm   = df_dt["private_running_mean"].to_numpy()
 
     # Ensure same length (trim to the shortest if needed)
-    n = min(len(true_rm), len(a1_rm), len(dt_rm))
+    lengths = [len(true_rm), len(a1_rm), len(dt_rm)]
+    if df_bm is not None:
+        bm_rm = df_bm["private_running_mean"].to_numpy()
+        lengths.append(len(bm_rm))
+
+    n = min(lengths)
     true_rm = true_rm[:n]
     a1_rm   = a1_rm[:n]
     dt_rm   = dt_rm[:n]
+    if df_bm is not None:
+        bm_rm = bm_rm[:n]
 
     # (Optional) sanity check: true series in both files roughly matches
     # If you want to enforce this strictly, uncomment:
@@ -98,6 +112,8 @@ def plot_three_running_means(
     y_true = true_rm[keep]
     y_a1   = a1_rm[keep]
     y_dt   = dt_rm[keep]
+    if df_bm is not None:
+        y_bm = bm_rm[keep]
 
     plt.rcParams.update({
         "text.usetex": bool(use_latex),
@@ -119,6 +135,8 @@ def plot_three_running_means(
     plt.plot(x, y_true, linestyle="--", linewidth=1.2, label="Running mean")
     plt.plot(x, y_a1,   linewidth=1.2, label="$\\mathbf{E}_1^{1/2}$")
     plt.plot(x, y_dt,   linewidth=1.2, label="$\\mathbf{D}_{\\mathrm{Toep}}$")
+    if df_bm is not None:
+        plt.plot(x, y_bm, linestyle="-.", linewidth=1.2, label=r"$\mathrm{BandMF}$")
 
     ax = plt.gca()
     set_xlabels_as_times_1e4(ax, n, step=5)
@@ -139,6 +157,7 @@ def plot_three_running_means(
 plot_three_running_means(
     csv_a1_sqrt="cache/mat_fact_algo_csv/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_CA1_sqrt.csv",
     csv_dtoep="cache/mat_fact_algo_csv/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_CDtoep.csv",
+    csv_bandmf="cache/mat_fact_algo_csv/running_means_b500_k389_p500_eps10.0_delta5e-06_xi1000_CBandMF.csv",
     output_pdf="plots/running_means_b500_k389_p16_eps10.0_delta5e-06_xi1000_combined.pdf",
     dense_first=2000,
     per_decade=200,

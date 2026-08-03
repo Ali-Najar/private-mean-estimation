@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 CACHE_FILE = 'cache/efficient_error_data.npz'
+CACHE_FILE_NUFTRL = 'cache/efficient_error_data_nuftrl.npz'
 BANDED_CACHE_FILE = 'cache/efficient_banded_cache.npz'
 
 prev_len = 0
@@ -19,6 +20,10 @@ errors_for_A_D_inv = []
 # A I / I
 errors_for_A_I = []
 
+errors_for_nuftrl = []
+
+
+
 if os.path.exists(CACHE_FILE):
     # load whatever was computed before
     data = np.load(CACHE_FILE)
@@ -27,6 +32,13 @@ if os.path.exists(CACHE_FILE):
     errors_for_A_D_sqrt_inv = list(data['errors_for_A_D_sqrt_inv'])
     errors_for_A_D_inv      = list(data['errors_for_A_D_inv'])
     prev_len = len(errors_for_A_I)
+
+if os.path.exists(CACHE_FILE_NUFTRL):
+    # load whatever was computed before
+    data = np.load(CACHE_FILE_NUFTRL)
+    errors_for_nuftrl    = list(data['errors_for_nuftrl'])
+    prev_len_nuftrl = len(errors_for_nuftrl)
+
 
 if os.path.exists(BANDED_CACHE_FILE):
     # load whatever was computed before
@@ -58,10 +70,17 @@ plt.rcParams.update({
 K = 15
 
 if plot_ratio == False:
-    plt.plot(n_range[:K], errors_for_D_A1_sqrt[:K], marker='^', label='(i) $\mathbf{D} \mathbf{E}_1^{1/2}, \mathbf{E}_1^{1/2}$')
-    plt.plot(n_range[:K], errors_for_A_I[:K], marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
-    plt.plot(n_range[:K], errors_for_A_D_sqrt_inv[:K], marker='s', label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
-    plt.plot(n_range[:K], errors_for_A_D_inv[:K], marker='D', label='RMSE of (viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    # plt.plot(n_range[:K], errors_for_D_A1_sqrt[:K], marker='^', label='(i) $\mathbf{D} \mathbf{E}_1^{1/2}, \mathbf{E}_1^{1/2}$')
+    # plt.plot(n_range[:K], errors_for_A_I[:K], marker='^', label='(ii) $\mathbf{A}, \mathbf{I}$')
+    # plt.plot(n_range[:K], errors_for_nuftrl[:K], marker='o', label='$\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    # plt.plot(n_range[:K], errors_for_A_D_sqrt_inv[:K], marker='s', label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    # plt.plot(n_range[:K], errors_for_A_D_inv[:K], marker='D', label='RMSE of (viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    # plt.plot(n_range[:K], errors_for_A_BandMF[:K], label='Optimal')
+    plt.plot(n_range[:K], errors_for_D_A1_sqrt[:K], marker='^', label='$\mathbf{E}_1^{1/2}$')
+    plt.plot(n_range[:K], errors_for_A_I[:K], marker='^', label='$\mathbf{I}$')
+    plt.plot(n_range[:K], errors_for_nuftrl[:K], marker='o', label='$\mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range[:K], errors_for_A_D_sqrt_inv[:K], marker='s', label='$\mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range[:K], errors_for_A_D_inv[:K], marker='D', label='$\mathbf{D}_{\mathrm{Toep}}$')
     plt.plot(n_range[:K], errors_for_A_BandMF[:K], label='Optimal')
     plt.xlabel('Matrix Size')
     plt.xscale('log')
@@ -75,10 +94,12 @@ else:
     ratios_AI = [errors_for_A_I[i] / errors_for_A_BandMF[i] for i in range(K)]
     ratios_D_toep = [errors_for_A_D_inv[i] / errors_for_A_BandMF[i] for i in range(K)]
     ratios_D_toep_sqrt = [errors_for_A_D_sqrt_inv[i] / errors_for_A_BandMF[i] for i in range(K)]
-    plt.plot(n_range[:K],ratios_D_A1_sqrt[:K], color='tab:blue', marker='o', label='(i) $\mathbf{D} \mathbf{E}_1^{1/2}, \mathbf{E}_1^{1/2}$')
-    plt.plot(n_range[:K],ratios_AI[:K], color='tab:orange', marker='s', label='(ii) $\mathbf{A}, \mathbf{I}$')
-    plt.plot(n_range[:K],ratios_D_toep_sqrt[:K], color='tab:green', marker='>' , label='(vi) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1/2}, \mathbf{D}_{\mathrm{Toep}}^{1/2}$')
-    plt.plot(n_range[:K],ratios_D_toep[:K], color='tab:red', marker='D', label='(viii) $\mathbf{A} \mathbf{D}_{\mathrm{Toep}}^{-1}, \mathbf{D}_{\mathrm{Toep}}$')
+    ratios_nuftrl = [errors_for_nuftrl[i] / errors_for_A_BandMF[i] for i in range(K)]
+    plt.plot(n_range[:K],ratios_D_A1_sqrt[:K], color='tab:blue', marker='o', label='$\mathbf{E}_1^{1/2}$')
+    plt.plot(n_range[:K],ratios_AI[:K], color='tab:orange', marker='s', label='$\mathbf{I}$')
+    plt.plot(n_range[:K], ratios_nuftrl[:K], color='tab:purple', marker='<', label='$\mathbf{E}_{\\nu}^{1/2}$')
+    # plt.plot(n_range[:K],ratios_D_toep_sqrt[:K], color='tab:green', marker='>' , label='$\mathbf{D}_{\mathrm{Toep}}^{1/2}$')
+    plt.plot(n_range[:K],ratios_D_toep[:K], color='tab:red', marker='D', label='$\mathbf{D}_{\mathrm{Toep}}$')
     plt.axhline(
     y=1.0,
     linestyle='--',

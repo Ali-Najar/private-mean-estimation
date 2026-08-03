@@ -1,9 +1,9 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# import jax_privacy
-# from jax_privacy.matrix_factorization import toeplitz
-# import jax.numpy as jnp
+import jax_privacy
+from jax_privacy.matrix_factorization import toeplitz
+import jax.numpy as jnp
 import numpy as np
 import functools
 import matplotlib.pyplot as plt
@@ -55,32 +55,32 @@ def compute_error_nu_FTRL(n, k, b):
   return min(res)
  
 
-# def expected_mean_error_BandMF(coef, n: int) -> float:
-#   coef = jnp.pad(coef, (0, n - coef.size))
-#   inv_coef = toeplitz.inverse_coef(coef)
-#   inv_coef_cum_sum_squared = jnp.cumsum(inv_coef) ** 2
-#   weights = jnp.cumsum((1 / jnp.arange(1, n + 1) ** 2)[::-1])[::-1]
+def expected_mean_error_BandMF(coef, n: int) -> float:
+  coef = jnp.pad(coef, (0, n - coef.size))
+  inv_coef = toeplitz.inverse_coef(coef)
+  inv_coef_cum_sum_squared = jnp.cumsum(inv_coef) ** 2
+  weights = jnp.cumsum((1 / jnp.arange(1, n + 1) ** 2)[::-1])[::-1]
 
-#   B_norm_squared = (inv_coef_cum_sum_squared * weights).sum()
+  B_norm_squared = (inv_coef_cum_sum_squared * weights).sum()
   
-#   sensitivity_squared = (coef ** 2).sum()
+  sensitivity_squared = (coef ** 2).sum()
 
-#   return sensitivity_squared * B_norm_squared
+  return sensitivity_squared * B_norm_squared
 
-# def init_BandMF(n, p):
-#   return 1/ (jnp.arange(p) + 1)
+def init_BandMF(n, p):
+  return 1/ (jnp.arange(p) + 1)
   
-# def Band_matrix_factorization(n, p, steps=10):
-#     C_init = init_BandMF(n, p)
-#     C_opt = toeplitz.optimize_banded_toeplitz(
-#       n=n,
-#       bands=p,
-#       strategy_coef=C_init,
-#       loss_fn=functools.partial(expected_mean_error_BandMF),
-#       max_optimizer_steps=steps,
-#     )
+def Band_matrix_factorization(n, p, steps=10):
+    C_init = init_BandMF(n, p)
+    C_opt = toeplitz.optimize_banded_toeplitz(
+      n=n,
+      bands=p,
+      strategy_coef=C_init,
+      loss_fn=functools.partial(expected_mean_error_BandMF),
+      max_optimizer_steps=steps,
+    )
 
-#     return expected_mean_error_BandMF(C_opt, n=n)**0.5 / np.sqrt(n)
+    return expected_mean_error_BandMF(C_opt, n=n)**0.5 / np.sqrt(n)
 
 
 def compute_mat_sqrt(N, Toep=True):
@@ -132,142 +132,146 @@ def reverse_cumsum_inv_squares(n):
     return rev_cum[::-1]
 
 
-bandW = 128
-steps = 50
+if __name__ == '__main__':
+    bandW = 128
+    steps = 50
 
-CACHE_FILE = 'cache/efficient_error_data.npz'
-CACHE_FILE_NUFTRL = 'cache/efficient_error_data_nuftrl.npz'
-BANDED_CACHE_FILE = f'cache/efficient_banded_cache.npz'
-import os
+    CACHE_FILE = 'cache/efficient_error_data.npz'
+    CACHE_FILE_NUFTRL = 'cache/efficient_error_data_nuftrl.npz'
+    BANDED_CACHE_FILE = f'cache/efficient_banded_cache.npz'
+    import os
 
-prev_len = 0
-prev_len_nuftrl = 0
-prev_len_banded = 0
+    prev_len = 0
+    prev_len_nuftrl = 0
+    prev_len_banded = 0
 
-errors_for_A_BandMF = []
-# D A1_sqrt / A1_sqrt
-errors_for_D_A1_sqrt = []
-# A D_toep^{-1/2} / D_toep^{1/2}
-errors_for_A_D_sqrt_inv = []
-# A D_toep^{-1} / D_toep
-errors_for_A_D_inv = []
-# A I / I
-errors_for_A_I = []
+    errors_for_A_BandMF = []
+    # D A1_sqrt / A1_sqrt
+    errors_for_D_A1_sqrt = []
+    # A D_toep^{-1/2} / D_toep^{1/2}
+    errors_for_A_D_sqrt_inv = []
+    # A D_toep^{-1} / D_toep
+    errors_for_A_D_inv = []
+    # A I / I
+    errors_for_A_I = []
 
-errors_for_nuftrl = []
+    errors_for_nuftrl = []
 
-if os.path.exists(CACHE_FILE):
-    # load whatever was computed before
-    data = np.load(CACHE_FILE)
-    errors_for_D_A1_sqrt    = list(data['errors_for_D_A1_sqrt'])
-    errors_for_A_I          = list(data['errors_for_A_I'])
-    errors_for_A_D_sqrt_inv = list(data['errors_for_A_D_sqrt_inv'])
-    errors_for_A_D_inv      = list(data['errors_for_A_D_inv'])
-    prev_len = len(errors_for_A_I)
+    if os.path.exists(CACHE_FILE):
+        # load whatever was computed before
+        data = np.load(CACHE_FILE)
+        errors_for_D_A1_sqrt    = list(data['errors_for_D_A1_sqrt'])
+        errors_for_A_I          = list(data['errors_for_A_I'])
+        errors_for_A_D_sqrt_inv = list(data['errors_for_A_D_sqrt_inv'])
+        errors_for_A_D_inv      = list(data['errors_for_A_D_inv'])
+        prev_len = len(errors_for_A_I)
 
-if os.path.exists(CACHE_FILE_NUFTRL):
-    # load whatever was computed before
-    data = np.load(CACHE_FILE_NUFTRL)
-    errors_for_nuftrl    = list(data['errors_for_nuftrl'])
-    prev_len_nuftrl = len(errors_for_nuftrl)
+    if os.path.exists(CACHE_FILE_NUFTRL):
+        # load whatever was computed before
+        data = np.load(CACHE_FILE_NUFTRL)
+        errors_for_nuftrl    = list(data['errors_for_nuftrl'])
+        prev_len_nuftrl = len(errors_for_nuftrl)
 
-if os.path.exists(BANDED_CACHE_FILE):
-    # load whatever was computed before
-    data = np.load(BANDED_CACHE_FILE)
-    errors_for_A_BandMF     = list(data.get('errors_for_A_BandMF', []))
-    prev_len_banded = len(errors_for_A_BandMF)
+    if os.path.exists(BANDED_CACHE_FILE):
+        # load whatever was computed before
+        data = np.load(BANDED_CACHE_FILE)
+        errors_for_A_BandMF     = list(data.get('errors_for_A_BandMF', []))
+        prev_len_banded = len(errors_for_A_BandMF)
 
-EXPS = 15
-exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
-n_range   = 2**exponents
+    EXPS = 15
+    exponents = np.arange(0, EXPS + 1)   # 2^0 ... 2^12 = 4096
+    n_range   = 2**exponents
 
-if prev_len - 1 < EXPS:
-
-
-    clipped_range = n_range[prev_len:]
-
-    for N in clipped_range:
-
-        print(f"Processing N={N}...")
-
-        inv_squares_cumsum = reverse_cumsum_inv_squares(N)
-        # D A1_sqrt , A1_sqrt
-        A1_sqrt = compute_mat_sqrt(N, Toep=False)
-        F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, inv_squares_cumsum)
-        # F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, 1.0 / np.arange(1, N+1, dtype=np.float64))
-        errors_for_D_A1_sqrt.append(1/np.sqrt(N) * np.sqrt(F_norm_D_A1_sqrt) * np.linalg.norm(A1_sqrt))
-        # A I / I
-        ordered_array = np.arange(1, N + 1, dtype=np.float64)
-        H = np.cumsum(1.0 / ordered_array)
-        error_AI = 1/np.sqrt(N) * np.sqrt(H[-1])
-        errors_for_A_I.append(error_AI)
-
-        # A D_toep^{-1/2} / D_toep^{1/2}
-        D_toep_sqrt = compute_mat_sqrt(N, Toep=True)
-        D_toep_sqrt_inv = invert_toeplitz_first_column(D_toep_sqrt)
-        cumsum_D_toep_sqrt_inv_sqr = np.cumsum(D_toep_sqrt_inv)**2
-        F_norm_A_D_sqrt_inv = np.dot(cumsum_D_toep_sqrt_inv_sqr, inv_squares_cumsum)
-        errors_for_A_D_sqrt_inv.append(1/np.sqrt(N) * np.sqrt(F_norm_A_D_sqrt_inv) * np.linalg.norm(D_toep_sqrt))
-
-        # A D_toep^{-1} / D_toep
-        D_toep = 1.0 / np.arange(1, N+1, dtype=np.float64)
-        column_norm = inv_squares_cumsum[0]
-        D_toep_inv = invert_toeplitz_first_column(D_toep)
-        cumsum_D_toep_inv_sqr = np.cumsum(D_toep_inv)**2
-        D_toep_inv_sqr = D_toep_inv**2
-        F_norm_A_D_inv = np.dot(cumsum_D_toep_inv_sqr, inv_squares_cumsum)
-        errors_for_A_D_inv.append(1/np.sqrt(N) * np.sqrt(F_norm_A_D_inv) * np.sqrt(column_norm))
+    if prev_len - 1 < EXPS:
 
 
-    
-    # Save the results
-    np.savez_compressed(
-            CACHE_FILE,
-            errors_for_D_A1_sqrt      = np.array(errors_for_D_A1_sqrt),
-            errors_for_A_I            = np.array(errors_for_A_I),
-            errors_for_A_D_sqrt_inv   = np.array(errors_for_A_D_sqrt_inv),
-            errors_for_A_D_inv        = np.array(errors_for_A_D_inv),
+        clipped_range = n_range[prev_len:]
+
+        for N in clipped_range:
+
+            print(f"Processing N={N}...")
+
+            inv_squares_cumsum = reverse_cumsum_inv_squares(N)
+            # D A1_sqrt , A1_sqrt
+            A1_sqrt = compute_mat_sqrt(N, Toep=False)
+            F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, inv_squares_cumsum)
+            # F_norm_D_A1_sqrt = np.dot(A1_sqrt**2, 1.0 / np.arange(1, N+1, dtype=np.float64))
+            errors_for_D_A1_sqrt.append(1/np.sqrt(N) * np.sqrt(F_norm_D_A1_sqrt) * np.linalg.norm(A1_sqrt))
+            # A I / I
+            ordered_array = np.arange(1, N + 1, dtype=np.float64)
+            H = np.cumsum(1.0 / ordered_array)
+            error_AI = 1/np.sqrt(N) * np.sqrt(H[-1])
+            errors_for_A_I.append(error_AI)
+
+            # A D_toep^{-1/2} / D_toep^{1/2}
+            D_toep_sqrt = compute_mat_sqrt(N, Toep=True)
+            D_toep_sqrt_inv = invert_toeplitz_first_column(D_toep_sqrt)
+            cumsum_D_toep_sqrt_inv_sqr = np.cumsum(D_toep_sqrt_inv)**2
+            F_norm_A_D_sqrt_inv = np.dot(cumsum_D_toep_sqrt_inv_sqr, inv_squares_cumsum)
+            errors_for_A_D_sqrt_inv.append(1/np.sqrt(N) * np.sqrt(F_norm_A_D_sqrt_inv) * np.linalg.norm(D_toep_sqrt))
+
+            # A D_toep^{-1} / D_toep
+            D_toep = 1.0 / np.arange(1, N+1, dtype=np.float64)
+            column_norm = inv_squares_cumsum[0]
+            D_toep_inv = invert_toeplitz_first_column(D_toep)
+            cumsum_D_toep_inv_sqr = np.cumsum(D_toep_inv)**2
+            D_toep_inv_sqr = D_toep_inv**2
+            F_norm_A_D_inv = np.dot(cumsum_D_toep_inv_sqr, inv_squares_cumsum)
+            errors_for_A_D_inv.append(1/np.sqrt(N) * np.sqrt(F_norm_A_D_inv) * np.sqrt(column_norm))
+
+
+        
+        # Save the results
+        np.savez_compressed(
+                CACHE_FILE,
+                errors_for_D_A1_sqrt      = np.array(errors_for_D_A1_sqrt),
+                errors_for_A_I            = np.array(errors_for_A_I),
+                errors_for_A_D_sqrt_inv   = np.array(errors_for_A_D_sqrt_inv),
+                errors_for_A_D_inv        = np.array(errors_for_A_D_inv),
+            )
+
+    if prev_len_nuftrl - 1 < EXPS:
+
+
+        clipped_range_banded = n_range[prev_len_nuftrl:]
+
+        for N in clipped_range_banded:
+
+            print("Processing N={} for nu-FTRL...".format(N))
+            
+            error_nuftrl = compute_error_nu_FTRL(N, k=1, b=N)
+            errors_for_nuftrl.append(error_nuftrl)
+
+        
+        np.savez_compressed(
+            CACHE_FILE_NUFTRL,
+            errors_for_nuftrl = np.array(errors_for_nuftrl)
         )
 
-if prev_len_nuftrl - 1 < EXPS:
 
-    clipped_range_banded = n_range[prev_len_nuftrl:]
+    if prev_len_banded - 1 < EXPS:
 
-    for N in clipped_range_banded:
+        clipped_range_banded = n_range[prev_len_banded:]
 
-        error_nuftrl = compute_error_nu_FTRL(N, k=1, b=N)
-        errors_for_nuftrl.append(error_nuftrl)
-
-    
-    np.savez_compressed(
-        CACHE_FILE_NUFTRL,
-        errors_for_nuftrl = np.array(errors_for_nuftrl)
-    )
-
-
-# if prev_len_banded - 1 < EXPS:
-
-#     clipped_range_banded = n_range[prev_len_banded:]
-
-#     for N in clipped_range_banded:
-#         if N < 10:
-#             steps = 50
-#             bandW = 512
-#         elif N < 14:
-#             steps = 20
-#             bandW = 256
-#         else:
-#             steps = 10
-#             bandW = 64
-#         print(f"Processing N={N} for banded matrix factorization...")
-#         error_BandMF = Band_matrix_factorization(N, min(N, bandW), steps=steps)
-#         errors_for_A_BandMF.append(error_BandMF)
-#         print(error_BandMF)
-#     # Save the results
-#     np.savez_compressed(
-#             BANDED_CACHE_FILE,
-#             errors_for_A_BandMF = np.array(errors_for_A_BandMF),
-#         )
+        for N in clipped_range_banded:
+            if N < 10:
+                steps = 50
+                bandW = 512
+            elif N < 14:
+                steps = 20
+                bandW = 256
+            else:
+                steps = 10
+                bandW = 64
+            print(f"Processing N={N} for banded matrix factorization...")
+            error_BandMF = Band_matrix_factorization(N, min(N, bandW), steps=steps)
+            errors_for_A_BandMF.append(error_BandMF)
+            print(error_BandMF)
+        # Save the results
+        np.savez_compressed(
+                BANDED_CACHE_FILE,
+                errors_for_A_BandMF = np.array(errors_for_A_BandMF),
+            )
 
 
 # plot_ratio = True

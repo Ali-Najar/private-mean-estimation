@@ -1,8 +1,13 @@
 images/
 .dist/
-
+plots/
+plots/*.pdf
 bin_mech_algo/
 mat_fact_algo/
+cache/
+credit_card_transactions.csv
+uci_data.csv
+.vscode/
 cache/bin_mech_runtime_EXP19_eps1.0_delta0.001.csv
 cache/runtime_summary_EXP19_m8_k8_p16_eps1_delta0.001_xi1_mu0.5.csv
 cache/runtime_summary_EXP19_m8_k8_p16_eps1_delta1e-06_xi1_mu0.5.csv
